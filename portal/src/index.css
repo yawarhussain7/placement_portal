@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS — Light (default)
+═══════════════════════════════════════════════ */
+:root {
+  --bg-base:        #f8fafc;
+  --bg-surface:     #ffffff;
+  --bg-subtle:      #f1f5f9;
+  --bg-muted:       #e2e8f0;
+
+  --border-base:    #e2e8f0;
+  --border-subtle:  #f1f5f9;
+
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #94a3b8;
+  --text-inverse:   #ffffff;
+
+  --accent:         #16a34a;
+  --accent-hover:   #15803d;
+  --accent-subtle:  #f0fdf4;
+  --accent-text:    #15803d;
+
+  --danger:         #ef4444;
+  --danger-subtle:  #fef2f2;
+  --danger-text:    #dc2626;
+
+  --header-bg:      #ffffff;
+  --sidebar-bg:     #ffffff;
+  --dropdown-bg:    #ffffff;
+
+  --input-bg:       #ffffff;
+  --input-border:   #e2e8f0;
+  --input-text:     #0f172a;
+  --placeholder:    #94a3b8;
+}
+
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS — Dark
+═══════════════════════════════════════════════ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-base:        #0f172a;
+  --bg-surface:     #1e293b;
+  --bg-subtle:      #1e293b;
+  --bg-muted:       #334155;
+
+  --border-base:    #334155;
+  --border-subtle:  #1e293b;
+
+  --text-primary:   #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #64748b;
+  --text-inverse:   #0f172a;
+
+  --accent:         #22c55e;
+  --accent-hover:   #16a34a;
+  --accent-subtle:  #052e16;
+  --accent-text:    #4ade80;
+
+  --danger:         #f87171;
+  --danger-subtle:  #2d0a0a;
+  --danger-text:    #f87171;
+
+  --header-bg:      #1e293b;
+  --sidebar-bg:     #1e293b;
+  --dropdown-bg:    #1e293b;
+
+  --input-bg:       #0f172a;
+  --input-border:   #334155;
+  --input-text:     #f1f5f9;
+  --placeholder:    #475569;
+}
+
+/* ═══════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════ */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ═══════════════════════════════════════════════
+   SEMANTIC UTILITY CLASSES
+   Use these in components instead of hardcoded Tailwind colors
+═══════════════════════════════════════════════ */
+
+/* backgrounds */
+.bg-base     { background-color: var(--bg-base); }
+.bg-surface  { background-color: var(--bg-surface); }
+.bg-subtle   { background-color: var(--bg-subtle); }
+.bg-muted    { background-color: var(--bg-muted); }
+
+/* borders */
+.border-base   { border-color: var(--border-base); }
+.border-subtle { border-color: var(--border-subtle); }
+
+/* text */
+.text-primary   { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted     { color: var(--text-muted); }
+
+/* accent */
+.bg-accent        { background-color: var(--accent); }
+.bg-accent-subtle { background-color: var(--accent-subtle); }
+.text-accent      { color: var(--accent-text); }
+.border-accent    { border-color: var(--accent); }
+.hover-accent:hover { background-color: var(--accent-hover); }
+
+/* danger */
+.bg-danger        { background-color: var(--danger); }
+.bg-danger-subtle { background-color: var(--danger-subtle); }
+.text-danger      { color: var(--danger-text); }
+
+/* inputs */
+.input-base {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--input-text);
+}
+.input-base::placeholder { color: var(--placeholder); }
+.input-base:focus { border-color: var(--accent); outline: none; }
+
+/* surface card */
+.card {
+  background-color: var(--bg-surface);
+  border-color: var(--border-base);
+}
+
+/* header */
+.header-surface {
+  background-color: var(--header-bg);
+  border-color: var(--border-base);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease;
+}
+
+/* sidebar */
+.sidebar-surface {
+  background-color: var(--sidebar-bg);
+  border-color: var(--border-base);
+  transition: background-color 0.2s ease;
+}
+
+/* dropdown */
+.dropdown-surface {
+  background-color: var(--dropdown-bg);
+  border-color: var(--border-base);
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR — hide globally
+═══════════════════════════════════════════════ */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar { display: none; }
