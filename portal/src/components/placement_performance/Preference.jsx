@@ -4,8 +4,9 @@ import { SelectField } from './SelectField';
 import { RadioGroup } from './RadioGroup';
 import { TextArea } from './TextArea';
 
+import { Placement_API } from '../../Api/newplacement/placementApi.js';
+
 const Placement_Performance = ({ onBack, onNext }) => {
-  // Main form states
   const [formData, setFormData] = useState({
     industry: '',
     role: '',
@@ -15,7 +16,10 @@ const Placement_Performance = ({ onBack, onNext }) => {
     workingHours: '',
     notes: ''
   });
-  
+
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState(false);
+
   const [selectedDays, setSelectedDays] = useState(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
   const [placement, setPlacement] = useState('on-site');
 
@@ -25,43 +29,95 @@ const Placement_Performance = ({ onBack, onNext }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.industry)
+      newErrors.industry = "Industry is required";
+
+    if (!formData.location)
+      newErrors.location = "Location is required";
+
+    if (!formData.availability)
+      newErrors.availability = "Availability is required";
+
+    if (selectedDays.length === 0)
+      newErrors.days = "Select at least one day";
+
+    if (!placement)
+      newErrors.placement = "Placement type is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const toggleDay = (day) => {
-    setSelectedDays(prev => 
+    setSelectedDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
   };
 
+  const handleForm = async (e) => {
+    e.preventDefault();
+    setTouched(true);
+
+    if (!validate()) return;
+
+    try {
+      const payload = {
+        ...formData,
+        available_Days: selectedDays,
+        placementType: placement
+      };
+
+      const response = await Placement_API(payload);
+
+      if (response?.data?.success) {
+        onNext();
+      }
+
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+
   return (
     <div className=" p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-sm">
-      <form onSubmit={(e) => { e.preventDefault(); onNext?.(); }} className="space-y-6">
-        
+      <form onSubmit={handleForm} className="space-y-6">
+
         {/* Row 1 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField 
-            label="Preferred Industry / Field" 
-            required 
-            placeholder="Select preferred industry"
-            value={formData.industry}
-            onChange={(e) => handleInputChange('industry', e.target.value)}
-            options={[
-              'Aged Care',
-              'Disability Support',
-              'Early Childhood Education',
-              'Community Services',
-              'Mental Health',
-              'Youth Work',
-              'Child Protection',
-              'Allied Health',
-              'Nursing & Midwifery',
-              'Social Work',
-              'Family Services',
-              'Homelessness & Housing',
-              'Alcohol & Drug Services',
-              'Other',
-            ]}
-          />
-          <SelectField 
-            label="Preferred Role / Department" 
+          <div>
+            <SelectField
+              label="Preferred Industry / Field"
+              required
+              placeholder="Select preferred industry"
+              value={formData.industry}
+              onChange={(e) => handleInputChange('industry', e.target.value)}
+              options={[
+                'Aged Care',
+                'Disability Support',
+                'Early Childhood Education',
+                'Community Services',
+                'Mental Health',
+                'Youth Work',
+                'Child Protection',
+                'Allied Health',
+                'Nursing & Midwifery',
+                'Social Work',
+                'Family Services',
+                'Homelessness & Housing',
+                'Alcohol & Drug Services',
+                'Other',
+              ]}
+            />
+            {touched && errors.industry && (
+              <p className="text-red-500 text-xs mt-1">{errors.industry}</p>
+            )}
+          </div>
+
+          <SelectField
+            label="Preferred Role / Department"
             placeholder="Select preferred role (optional)"
             value={formData.role}
             onChange={(e) => handleInputChange('role', e.target.value)}
@@ -84,75 +140,70 @@ const Placement_Performance = ({ onBack, onNext }) => {
 
         {/* Row 2 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField 
-            label="Preferred Location" 
-            required 
-            placeholder="Select preferred location or area"
-            value={formData.location}
-            onChange={(e) => handleInputChange('location', e.target.value)}
-            options={[
-              'Melbourne CBD',
-              'Melbourne - Inner North',
-              'Melbourne - Inner South',
-              'Melbourne - Inner East',
-              'Melbourne - Inner West',
-              'Melbourne - Outer North',
-              'Melbourne - Outer South',
-              'Melbourne - Outer East',
-              'Melbourne - Outer West',
-              'Geelong',
-              'Ballarat',
-              'Bendigo',
-              'Sydney CBD',
-              'Sydney - North',
-              'Sydney - South',
-              'Sydney - West',
-              'Brisbane CBD',
-              'Brisbane - North',
-              'Brisbane - South',
-              'Gold Coast',
-              'Perth CBD',
-              'Adelaide CBD',
-              'Canberra',
-              'Darwin',
-              'Hobart',
-              'Regional / Remote',
-              'Open to Any Location',
-            ]}
-          />
-          <RadioGroup 
-            label="Willing to Relocate?" 
-            required 
+          <div>
+            <SelectField
+              label="Preferred Location"
+              required
+              placeholder="Select preferred location or area"
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              options={[
+                'Melbourne CBD',
+                'Sydney CBD',
+                'Brisbane CBD',
+                'Perth CBD',
+                'Adelaide CBD',
+                'Canberra',
+                'Regional / Remote',
+                'Open to Any Location',
+              ]}
+            />
+            {touched && errors.location && (
+              <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+            )}
+          </div>
+
+          <RadioGroup
+            label="Willing to Relocate?"
+            required
             name="relocate"
             value={formData.relocate}
-            options={[{ label: 'Yes', value: 'yes' }, { label: 'No', value: 'no' }]}
+            options={[
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]}
             onChange={(val) => handleInputChange('relocate', val)}
           />
         </div>
 
         {/* Row 3 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField 
-            label="Availability to Start" 
-            required 
-            placeholder="Select your availability"
-            value={formData.availability}
-            onChange={(e) => handleInputChange('availability', e.target.value)}
-            options={[
-              'Immediately',
-              'Within 2 weeks',
-              'Within 1 month',
-              'Within 2 months',
-              'Within 3 months',
-              'More than 3 months',
-            ]}
-          />
-          
-          {/* Custom Days Picker Sub-section */}
+          <div>
+            <SelectField
+              label="Availability to Start"
+              required
+              placeholder="Select your availability"
+              value={formData.availability}
+              onChange={(e) => handleInputChange('availability', e.target.value)}
+              options={[
+                'Immediately',
+                'Within 2 weeks',
+                'Within 1 month',
+                'Within 2 months',
+                'Within 3 months',
+                'More than 3 months',
+              ]}
+            />
+            {touched && errors.availability && (
+              <p className="text-red-500 text-xs mt-1">{errors.availability}</p>
+            )}
+          </div>
+
           <div>
             <label className="block text-gray-900 font-semibold mb-2">
               Days Available <span className="text-red-500">*</span>
             </label>
+
             <div className="flex flex-wrap gap-2">
               {daysOfWeek.map((day) => {
                 const isSelected = selectedDays.includes(day);
@@ -172,19 +223,24 @@ const Placement_Performance = ({ onBack, onNext }) => {
                 );
               })}
             </div>
+
+            {touched && errors.days && (
+              <p className="text-red-500 text-xs mt-2">{errors.days}</p>
+            )}
           </div>
         </div>
 
         {/* Row 4 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Custom Placement Selector Sub-section */}
           <div>
             <label className="block text-gray-900 font-semibold mb-2">
               Preferred Placement Type <span className="text-red-500">*</span>
             </label>
+
             <div className="grid grid-cols-3 gap-2">
               {['on-site', 'hybrid', 'remote'].map((type) => {
                 const isActive = placement === type;
+
                 return (
                   <button
                     type="button"
@@ -196,16 +252,20 @@ const Placement_Performance = ({ onBack, onNext }) => {
                         : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}
                   >
-                    {isActive && <Check className="w-4 h-4 text-green-700 flex-shrink-0" />}
+                    {isActive && <Check className="w-4 h-4 text-green-700" />}
                     <span>{type === 'on-site' ? 'On-site' : type}</span>
                   </button>
                 );
               })}
             </div>
+
+            {touched && errors.placement && (
+              <p className="text-red-500 text-xs mt-2">{errors.placement}</p>
+            )}
           </div>
 
-          <SelectField 
-            label="Preferred Working Hours" 
+          <SelectField
+            label="Preferred Working Hours"
             placeholder="Select working hours (optional)"
             value={formData.workingHours}
             onChange={(e) => handleInputChange('workingHours', e.target.value)}
@@ -220,8 +280,8 @@ const Placement_Performance = ({ onBack, onNext }) => {
         </div>
 
         {/* Row 5 */}
-        <TextArea 
-          label="Tell us more about your preferences" 
+        <TextArea
+          label="Tell us more about your preferences"
           optionalText="(optional)"
           placeholder="Type your preferences here..."
           value={formData.notes}
@@ -230,12 +290,22 @@ const Placement_Performance = ({ onBack, onNext }) => {
 
         <div className="flex justify-between items-center pt-4 border-t border-gray-100">
           {onBack ? (
-            <button type="button" onClick={onBack} className="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors">
-              <ArrowLeft size={14} /><span>Back</span>
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors"
+            >
+              <ArrowLeft size={14} />
+              <span>Back</span>
             </button>
           ) : <div />}
-          <button type="submit" className="flex items-center gap-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm">
-            <span>Save & Continue</span><ArrowRight size={14} />
+
+          <button
+            type="submit"
+            className="flex items-center gap-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+          >
+            <span>Save & Continue</span>
+            <ArrowRight size={14} />
           </button>
         </div>
 
