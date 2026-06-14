@@ -16,7 +16,6 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
 
   const [studyMode, setStudyMode] = useState('full-time');
 
-  // ✅ FIX 1: added errors state (missing in your code)
   const [errors, setErrors] = useState({});
 
   const [error, setError] = useState("");
@@ -24,11 +23,10 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    // optional: clear error when user fixes field
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  // ✅ FIX 2: proper validation
+
   const validate = () => {
     const newErrors = {};
 
@@ -44,7 +42,6 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ FIX 3: corrected validate() call + safe API flow
   const handleSubmit = async (e) => {
     e.preventDefault();
 

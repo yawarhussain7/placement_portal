@@ -1,50 +1,85 @@
 import React, { useState } from 'react';
-import { FileText, IdCard, GraduationCap, Award, FolderPlus, Upload, FileCheck, ArrowLeft, ArrowRight } from 'lucide-react';
+import {
+  FileText,
+  IdCard,
+  GraduationCap,
+  Award,
+  FolderPlus,
+  Upload,
+  FileCheck,
+  ArrowLeft,
+  ArrowRight
+} from 'lucide-react';
+
+import { PlacementDocApi } from '../../Api/newplacement/documentApi.js';
 
 const My_Application = ({ onBack, onNext }) => {
-  // State to track uploaded file names for each document type
+  // store full file object + name safely
   const [uploadedFiles, setUploadedFiles] = useState({
     resume: null,
     photoId: null,
     studentId: null,
     transcript: null,
     certificates: null,
-    additional: null,
+    additional: null
   });
 
-  // Mock handler for file selection
+  // handle file selection
   const handleFileChange = (e, docType) => {
     const file = e.target.files[0];
-    if (file) {
-      setUploadedFiles((prev) => ({
-        ...prev,
-        [docType]: file.name,
-      }));
+    if (!file) return;
+
+    setUploadedFiles((prev) => ({
+      ...prev,
+      [docType]: file
+    }));
+  };
+
+  // upload all files
+  const handleUpload = async () => {
+    try {
+      const formData = new FormData();
+
+      Object.keys(uploadedFiles).forEach((key) => {
+        if (uploadedFiles[key]) {
+          formData.append(key, uploadedFiles[key]);
+        }
+      });
+
+      const result = await PlacementDocApi(formData);
+      console.log("Upload success:", result);
+
+      if(result?.data?.success){
+         onNext?.();
+      }
+      
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Upload failed!");
     }
   };
 
-  // Configuration for the document rows
   const documentRows = [
     {
       id: 'resume',
       title: 'Resume / CV',
       required: true,
       description: 'Upload your latest resume',
-      icon: FileText,
+      icon: FileText
     },
     {
       id: 'photoId',
       title: 'Photo ID',
       required: true,
       description: "Passport, Driver's License or Medicare Card",
-      icon: IdCard,
+      icon: IdCard
     },
     {
       id: 'studentId',
       title: 'Student ID / Proof of Enrolment',
       required: true,
       description: 'Upload your student ID or enrolment letter',
-      icon: GraduationCap,
+      icon: GraduationCap
     },
     {
       id: 'transcript',
@@ -52,7 +87,7 @@ const My_Application = ({ onBack, onNext }) => {
       required: false,
       extraText: '(if available)',
       description: 'Upload your latest academic transcript',
-      icon: FileText,
+      icon: FileText
     },
     {
       id: 'certificates',
@@ -60,7 +95,7 @@ const My_Application = ({ onBack, onNext }) => {
       required: false,
       extraText: '(if any)',
       description: 'Upload relevant certificates',
-      icon: Award,
+      icon: Award
     },
     {
       id: 'additional',
@@ -68,56 +103,63 @@ const My_Application = ({ onBack, onNext }) => {
       required: false,
       extraText: '(optional)',
       description: 'Any other supporting documents',
-      icon: FolderPlus,
-    },
+      icon: FolderPlus
+    }
   ];
 
   return (
-    <div className=" p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
       <div className="divide-y divide-gray-100">
+
         {documentRows.map((doc) => {
-          const IconComponent = doc.icon;
-          const isUploaded = !!uploadedFiles[doc.id];
+          const Icon = doc.icon;
+          const file = uploadedFiles[doc.id];
 
           return (
             <div
               key={doc.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between py-5 first:pt-0 last:pb-0 gap-4"
+              className="flex flex-col sm:flex-row sm:items-center justify-between py-5 gap-4"
             >
-              {/* Left Side: Icon & Document Details */}
+              {/* LEFT SIDE */}
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-green-50 rounded-xl text-green-700 flex-shrink-0">
-                  <IconComponent className="w-6 h-6" />
+                <div className="p-3 bg-green-50 rounded-xl text-green-700">
+                  <Icon className="w-6 h-6" />
                 </div>
+
                 <div>
                   <h3 className="text-gray-900 font-semibold text-base flex items-center gap-1">
                     {doc.title}
                     {doc.extraText && (
-                      <span className="text-gray-500 font-normal text-sm ml-1">
+                      <span className="text-gray-500 text-sm ml-1">
                         {doc.extraText}
                       </span>
                     )}
-                    {doc.required && <span className="text-red-500 font-bold">*</span>}
+                    {doc.required && (
+                      <span className="text-red-500 font-bold">*</span>
+                    )}
                   </h3>
-                  <p className="text-gray-500 text-sm mt-0.5">{doc.description}</p>
-                  
-                  {/* Shows file name if a file is uploaded */}
-                  {isUploaded && (
-                    <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-md w-fit">
+
+                  <p className="text-gray-500 text-sm">
+                    {doc.description}
+                  </p>
+
+                  {/* FILE NAME DISPLAY (FIXED) */}
+                  {file && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-md w-fit">
                       <FileCheck className="w-3.5 h-3.5" />
-                      <span className="truncate max-w-[200px] sm:max-w-sm">
-                        {uploadedFiles[doc.id]}
+                      <span className="truncate max-w-[200px]">
+                        {file.name}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Right Side: Upload Button */}
-              <div className="flex-shrink-0 self-end sm:self-center">
-                <label className="cursor-pointer group flex items-center gap-2 px-4 py-2.5 border border-green-600 rounded-lg text-green-700 font-medium text-sm hover:bg-green-50 transition-colors duration-200">
-                  <Upload className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-                  <span>Upload File</span>
+              {/* RIGHT SIDE */}
+              <div className="flex-shrink-0">
+                <label className="cursor-pointer flex items-center gap-2 px-4 py-2 border border-green-600 rounded-lg text-green-700 text-sm hover:bg-green-50">
+                  <Upload className="w-4 h-4" />
+                  Upload File
                   <input
                     type="file"
                     className="hidden"
@@ -128,22 +170,25 @@ const My_Application = ({ onBack, onNext }) => {
             </div>
           );
         })}
+
       </div>
 
-      <div className="flex justify-between items-center pt-6 mt-4 border-t border-gray-100">
+      {/* BUTTONS */}
+      <div className="flex justify-between pt-6 mt-4 border-t">
         <button
-          type="button"
           onClick={onBack}
-          className="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-5 py-2 border rounded-lg text-gray-600"
         >
-          <ArrowLeft size={14} /><span>Back</span>
+          <ArrowLeft size={14} />
+          Back
         </button>
+
         <button
-          type="button"
-          onClick={onNext}
-          className="flex items-center gap-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+          onClick={handleUpload}
+          className="flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg"
         >
-          <span>Save & Continue</span><ArrowRight size={14} />
+          Save & Upload
+          <ArrowRight size={14} />
         </button>
       </div>
     </div>
