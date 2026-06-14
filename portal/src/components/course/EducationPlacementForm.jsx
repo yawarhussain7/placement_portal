@@ -1,30 +1,82 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { SelectField } from './SelectField'
+import { SelectField } from './SelectField';
 import { InputField } from './InputField';
+import { NewCourse } from '../../Api/newplacement/course_detailsApi.js';
 
 const EducationPlacementForm = ({ onBack, onNext }) => {
-  // Component States
   const [formData, setFormData] = useState({
     course: '',
     institution: '',
     courseCode: '',
     studyStatus: '',
     completionDate: '',
-    placementReason: 'mandatory' // Default value matching the image
+    placementReason: 'mandatory'
   });
 
   const [studyMode, setStudyMode] = useState('full-time');
 
+  // ✅ FIX 1: added errors state (missing in your code)
+  const [errors, setErrors] = useState({});
+
+  const [error, setError] = useState("");
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // optional: clear error when user fixes field
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  // ✅ FIX 2: proper validation
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.course) newErrors.course = "Course is required";
+    if (!formData.institution) newErrors.institution = "Institution is required";
+    if (!formData.studyStatus) newErrors.studyStatus = "Study status is required";
+    if (!formData.completionDate) newErrors.completionDate = "Completion date is required";
+    if (!studyMode) newErrors.studyMode = "Study mode is required";
+    if (!formData.placementReason) newErrors.placementReason = "Placement type is required";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // ✅ FIX 3: corrected validate() call + safe API flow
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validate()) return;
+
+    try {
+      const payload = {
+        ...formData,
+        studyMode,
+      };
+
+      const response = await NewCourse(payload);
+
+      if (response?.data?.success) {
+        onNext?.();
+      } else {
+        setError(response?.data?.message || "Failed to save details");
+      }
+    } catch (error) {
+      setError(error?.response?.data?.message || "Server error");
+    }
   };
 
   return (
     <div className=" p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-sm">
-      <form onSubmit={(e) => { e.preventDefault(); onNext?.(); }} className="space-y-6">
-        
-        {/* Row 1: Full-width Course Selection */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+
+        {error && (
+          <p className="text-red-500 text-sm">{error}</p>
+        )}
+
+        {/* Course */}
         <div>
           <SelectField
             label="Course / Qualification"
@@ -49,36 +101,41 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
               'Other',
             ]}
           />
+          {errors.course && <p className="text-red-500 text-xs">{errors.course}</p>}
         </div>
 
-        {/* Row 2: Institution & Course Code */}
+        {/* Institution + Course Code */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField
-            label="RTO / Institution"
-            required
-            placeholder="Select your RTO / Institution"
-            value={formData.institution}
-            onChange={(e) => handleInputChange('institution', e.target.value)}
-            options={[
-              'Inspire Education',
-              'TAFE NSW',
-              'TAFE Queensland',
-              'TAFE Victoria',
-              'TAFE SA',
-              'TAFE WA',
-              'Swinburne University',
-              'RMIT University',
-              'Monash University',
-              'University of Melbourne',
-              'Deakin University',
-              'La Trobe University',
-              'Australian Catholic University',
-              'Holmesglen Institute',
-              'Box Hill Institute',
-              'Chisholm Institute',
-              'Other',
-            ]}
-          />
+          <div>
+            <SelectField
+              label="RTO / Institution"
+              required
+              placeholder="Select your RTO / Institution"
+              value={formData.institution}
+              onChange={(e) => handleInputChange('institution', e.target.value)}
+              options={[
+                'Inspire Education',
+                'TAFE NSW',
+                'TAFE Queensland',
+                'TAFE Victoria',
+                'TAFE SA',
+                'TAFE WA',
+                'Swinburne University',
+                'RMIT University',
+                'Monash University',
+                'University of Melbourne',
+                'Deakin University',
+                'La Trobe University',
+                'Australian Catholic University',
+                'Holmesglen Institute',
+                'Box Hill Institute',
+                'Chisholm Institute',
+                'Other',
+              ]}
+            />
+            {errors.institution && <p className="text-red-500 text-xs">{errors.institution}</p>}
+          </div>
+
           <InputField
             label="Course Code"
             optionalText="(if applicable)"
@@ -88,23 +145,26 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
           />
         </div>
 
-        {/* Row 3: Study Status & Expected Completion Date */}
+        {/* Study Status + Date */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <SelectField
-            label="Current Study Status"
+          <div>
+            <SelectField
+              label="Current Study Status"
+              required
+              placeholder="Select your current study status"
+              value={formData.studyStatus}
+              onChange={(e) => handleInputChange('studyStatus', e.target.value)}
+              options={[
+                'Currently Enrolled',
+                'Final Semester',
+                'Final Year',
+                'Awaiting Results',
+                'Recently Graduated',
+              ]}
+            />
+            {errors.studyStatus && <p className="text-red-500 text-xs">{errors.studyStatus}</p>}
+          </div>
 
-            required
-            placeholder="Select your current study status"
-            value={formData.studyStatus}
-            onChange={(e) => handleInputChange('studyStatus', e.target.value)}
-            options={[
-              'Currently Enrolled',
-              'Final Semester',
-              'Final Year',
-              'Awaiting Results',
-              'Recently Graduated',
-            ]}
-          />
           <div className="relative">
             <InputField
               label="Expected Completion Date"
@@ -113,17 +173,20 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
               value={formData.completionDate}
               onChange={(e) => handleInputChange('completionDate', e.target.value)}
             />
+            {errors.completionDate && <p className="text-red-500 text-xs">{errors.completionDate}</p>}
           </div>
         </div>
 
-        {/* Row 4: Mode of Study (Segmented Custom Radio) */}
+        {/* Mode of Study */}
         <div>
           <label className="block text-gray-900 font-semibold mb-2">
             Mode of Study <span className="text-red-500">*</span>
           </label>
+
           <div className="grid grid-cols-3 gap-2 max-w-xl">
             {['full-time', 'part-time', 'online'].map((mode) => {
               const isActive = studyMode === mode;
+
               return (
                 <button
                   type="button"
@@ -135,7 +198,6 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
                       : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                   }`}
                 >
-                  {/* Subtle inner radio button ring to match image */}
                   <span className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
                     isActive ? 'border-green-600' : 'border-gray-300'
                   }`}>
@@ -146,57 +208,60 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
               );
             })}
           </div>
+
+          {errors.studyMode && (
+            <p className="text-red-500 text-xs">{errors.studyMode}</p>
+          )}
         </div>
 
-        {/* Row 5: Vertical Radio List for Placement Type */}
+        {/* Placement Type */}
         <div className="space-y-3 pt-2">
           <label className="block text-gray-900 font-semibold">
             What is this placement for? <span className="text-red-500">*</span>
           </label>
-          
+
           <div className="space-y-3">
-            {/* Mandatory Option */}
             <label className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="radio"
-                name="placementReason"
-                value="mandatory"
                 checked={formData.placementReason === 'mandatory'}
                 onChange={() => handleInputChange('placementReason', 'mandatory')}
                 className="sr-only"
               />
-              <span className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${
-                formData.placementReason === 'mandatory' ? 'border-green-600' : 'border-gray-300 group-hover:border-gray-400'
-              }`}>
-                {formData.placementReason === 'mandatory' && <span className="w-2.5 h-2.5 bg-green-600 rounded-full" />}
+              <span className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0">
+                {formData.placementReason === 'mandatory' && (
+                  <span className="w-2.5 h-2.5 bg-green-600 rounded-full" />
+                )}
               </span>
               <div className="text-gray-800 font-medium">
                 Mandatory <span className="text-gray-500 font-normal">(Requirement for course completion)</span>
               </div>
             </label>
 
-            {/* Voluntary Option */}
             <label className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="radio"
-                name="placementReason"
-                value="voluntary"
                 checked={formData.placementReason === 'voluntary'}
                 onChange={() => handleInputChange('placementReason', 'voluntary')}
                 className="sr-only"
               />
-              <span className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${
-                formData.placementReason === 'voluntary' ? 'border-green-600' : 'border-gray-300 group-hover:border-gray-400'
-              }`}>
-                {formData.placementReason === 'voluntary' && <span className="w-2.5 h-2.5 bg-green-600 rounded-full" />}
+              <span className="mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0">
+                {formData.placementReason === 'voluntary' && (
+                  <span className="w-2.5 h-2.5 bg-green-600 rounded-full" />
+                )}
               </span>
               <div className="text-gray-800 font-medium">
                 Voluntary <span className="text-gray-500 font-normal">(Work experience / additional)</span>
               </div>
             </label>
           </div>
+
+          {errors.placementReason && (
+            <p className="text-red-500 text-xs">{errors.placementReason}</p>
+          )}
         </div>
 
+        {/* Buttons */}
         <div className="flex justify-between items-center pt-6 mt-2 border-t border-gray-100">
           <button
             type="button"
@@ -206,7 +271,11 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
             <ArrowLeft size={14} />
             <span>Back</span>
           </button>
-          <button type="submit" className="flex items-center space-x-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm">
+
+          <button
+            type="submit"
+            className="flex items-center space-x-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+          >
             <span>Save & Continue</span>
             <ArrowRight size={14} />
           </button>
