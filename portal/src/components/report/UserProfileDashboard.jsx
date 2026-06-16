@@ -4,6 +4,8 @@ import {
   Clock, Briefcase, UserCheck, Radio, FileText, ArrowLeft, ArrowRight,
   ChevronDown, Check, Pencil, X
 } from 'lucide-react';
+import { usePlacementForm } from '../../context/PlacementFormContext.jsx';
+import { submitPlacementApplication } from '../../Api/newplacement/placementSubmitApi.js';
 
 // ─── Reusable inline field components ────────────────────────────────────────
 
@@ -76,14 +78,24 @@ const Section = ({ title, icon: Icon, editing, onEdit, onCancel, onSave, childre
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function UserProfileDashboard({ onBack }) {
+  const { placementForm, updatePersonal, updateCourse, updatePreference } = usePlacementForm()
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   // ── Personal Details ──
   const [editingPersonal, setEditingPersonal] = useState(false);
   const [personal, setPersonal] = useState({
-    fullName: 'John Smith', email: 'john.smith@email.com',
-    phoneNumber: '412 345 678', dob: '15/06/1995',
-    gender: 'Male', address: '25 Collins Street',
-    suburb: 'Melbourne', state: 'VIC', postcode: '3000', isCitizen: 'Yes'
+    fullName: placementForm.personal.fullName || 'John Smith',
+    email: placementForm.personal.email || 'john.smith@email.com',
+    phoneNumber: placementForm.personal.phoneNumber || '412 345 678',
+    dob: placementForm.personal.dob || '15/06/1995',
+    gender: placementForm.personal.gender || 'Male',
+    address: placementForm.personal.address || '25 Collins Street',
+    suburb: placementForm.personal.suburb || 'Melbourne',
+    state: placementForm.personal.state || 'VIC',
+    postcode: placementForm.personal.postcode || '3000',
+    isCitizen: placementForm.personal.isCitizen || 'Yes'
   });
   const [personalDraft, setPersonalDraft] = useState(personal);
   const pSet = field => val => setPersonalDraft(p => ({ ...p, [field]: val }));
@@ -91,13 +103,13 @@ export default function UserProfileDashboard({ onBack }) {
   // ── Course Details ──
   const [editingCourse, setEditingCourse] = useState(false);
   const [course, setCourse] = useState({
-    course: 'Certificate III in Individual Support (Ageing)',
-    institution: 'Inspire Education',
-    courseCode: 'CHC33015',
-    studyStatus: 'Currently Enrolled',
-    completionDate: '2025-06-15',
-    studyMode: 'full-time',
-    placementReason: 'mandatory'
+    course: placementForm.course.course || 'Certificate III in Individual Support (Ageing)',
+    institution: placementForm.course.institution || 'Inspire Education',
+    courseCode: placementForm.course.courseCode || 'CHC33015',
+    studyStatus: placementForm.course.studyStatus || 'Currently Enrolled',
+    completionDate: placementForm.course.completionDate || '2025-06-15',
+    studyMode: placementForm.course.studyMode || 'full-time',
+    placementReason: placementForm.course.placementReason || 'mandatory'
   });
   const [courseDraft, setCourseDraft] = useState(course);
   const cSet = field => val => setCourseDraft(p => ({ ...p, [field]: val }));
@@ -105,11 +117,15 @@ export default function UserProfileDashboard({ onBack }) {
   // ── Placement Preferences ──
   const [editingPref, setEditingPref] = useState(false);
   const [pref, setPref] = useState({
-    industry: 'Aged Care', role: 'Support Worker',
-    location: 'Melbourne CBD', relocate: 'yes',
-    availability: 'Immediately', workingHours: 'Morning (6am – 12pm)',
-    placementType: 'on-site', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    notes: ''
+    industry: placementForm.preference.industry || 'Aged Care',
+    role: placementForm.preference.role || 'Support Worker',
+    location: placementForm.preference.location || 'Melbourne CBD',
+    relocate: placementForm.preference.relocate || 'yes',
+    availability: placementForm.preference.availability || 'Immediately',
+    workingHours: placementForm.preference.workingHours || 'Morning (6am – 12pm)',
+    placementType: placementForm.preference.placementType || 'on-site',
+    days: placementForm.preference.availableDays?.length > 0 ? placementForm.preference.availableDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    notes: placementForm.preference.notes || ''
   });
   const [prefDraft, setPrefDraft] = useState(pref);
   const rSet = field => val => setPrefDraft(p => ({ ...p, [field]: val }));
@@ -117,6 +133,89 @@ export default function UserProfileDashboard({ onBack }) {
     ...p,
     days: p.days.includes(day) ? p.days.filter(d => d !== day) : [...p.days, day]
   }));
+
+  // Count uploaded documents
+  const docCount = Object.values(placementForm.documents).filter(f => f !== null).length
+  const totalRequired = 3; // resume, photoId, studentId
+
+  const handlePersonalSave = () => {
+    setPersonal(personalDraft);
+    updatePersonal(personalDraft);
+    setEditingPersonal(false);
+  };
+
+  const handleCourseSave = () => {
+    setCourse(courseDraft);
+    updateCourse(courseDraft);
+    setEditingCourse(false);
+  };
+
+  const handlePrefSave = () => {
+    setPref(prefDraft);
+    updatePreference({
+      ...prefDraft,
+      availableDays: prefDraft.days,
+      placementType: prefDraft.placementType
+    });
+    setEditingPref(false);
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const formData = new FormData();
+
+      // Append personal details with flat keys (p_ prefix)
+      Object.entries(personal).forEach(([key, val]) => {
+        formData.append(`p_${key}`, String(val));
+      });
+
+      // Append course details with flat keys (c_ prefix)
+      Object.entries(course).forEach(([key, val]) => {
+        formData.append(`c_${key}`, String(val));
+      });
+
+      // Append preference details with flat keys (r_ prefix)
+      Object.entries(pref).forEach(([key, val]) => {
+        if (key === 'days') {
+          formData.append('r_days', JSON.stringify(pref.days));
+        } else {
+          formData.append(`r_${key}`, String(val));
+        }
+      });
+
+      // Append document files
+      Object.entries(placementForm.documents).forEach(([key, file]) => {
+        if (file) {
+          formData.append(key, file);
+        }
+      });
+
+      const response = await submitPlacementApplication(formData);
+      if (response?.data?.success) {
+        setSubmitSuccess(true);
+      } else {
+        setSubmitError(response?.data?.message || 'Submission failed');
+      }
+    } catch (error) {
+      setSubmitError(error?.response?.data?.message || 'Server error during submission');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitSuccess) {
+    return (
+      <div className="w-full bg-gray-50/30 rounded-2xl flex flex-col items-center justify-center py-20 gap-4">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+          <Check className="w-8 h-8 text-green-600" />
+        </div>
+        <h2 className="text-xl font-semibold text-gray-800">Application Submitted Successfully!</h2>
+        <p className="text-gray-500 text-sm">Your placement application has been received.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-gray-50/30 rounded-2xl flex flex-col gap-5">
@@ -127,7 +226,7 @@ export default function UserProfileDashboard({ onBack }) {
         editing={editingPersonal}
         onEdit={() => { setPersonalDraft(personal); setEditingPersonal(true); }}
         onCancel={() => setEditingPersonal(false)}
-        onSave={() => { setPersonal(personalDraft); setEditingPersonal(false); }}
+        onSave={handlePersonalSave}
       >
         {editingPersonal ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -209,7 +308,7 @@ export default function UserProfileDashboard({ onBack }) {
         editing={editingCourse}
         onEdit={() => { setCourseDraft(course); setEditingCourse(true); }}
         onCancel={() => setEditingCourse(false)}
-        onSave={() => { setCourse(courseDraft); setEditingCourse(false); }}
+        onSave={handleCourseSave}
       >
         {editingCourse ? (
           <div className="flex flex-col gap-4">
@@ -289,7 +388,7 @@ export default function UserProfileDashboard({ onBack }) {
         editing={editingPref}
         onEdit={() => { setPrefDraft(pref); setEditingPref(true); }}
         onCancel={() => setEditingPref(false)}
-        onSave={() => { setPref(prefDraft); setEditingPref(false); }}
+        onSave={handlePrefSave}
       >
         {editingPref ? (
           <div className="flex flex-col gap-4">
@@ -388,14 +487,17 @@ export default function UserProfileDashboard({ onBack }) {
           </div>
           <div>
             <h2 className="text-base font-semibold text-green-700 mb-0.5">Documents Uploaded</h2>
-            <p className="text-sm text-gray-500">5 of 6 required documents uploaded</p>
+            <p className="text-sm text-gray-500">{docCount} of {totalRequired} required documents uploaded</p>
           </div>
         </div>
-        <button className="flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-800 transition-colors group">
-          <span>View Documents</span>
-          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-        </button>
       </div>
+
+      {/* Submit Error */}
+      {submitError && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+          {submitError}
+        </div>
+      )}
 
       {/* ── Navigation ── */}
       <div className="flex justify-between items-center pt-2">
@@ -403,9 +505,14 @@ export default function UserProfileDashboard({ onBack }) {
           className="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors">
           <ArrowLeft size={14} /><span>Back</span>
         </button>
-        <button type="button"
-          className="flex items-center gap-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm">
-          <span>Submit Application</span><ArrowRight size={14} />
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="flex items-center gap-2 bg-[#12692e] hover:bg-emerald-800 disabled:bg-gray-400 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+        >
+          <span>{submitting ? 'Submitting...' : 'Submit Application'}</span>
+          <ArrowRight size={14} />
         </button>
       </div>
 

@@ -3,25 +3,26 @@ import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { SelectField } from './SelectField';
 import { RadioGroup } from './RadioGroup';
 import { TextArea } from './TextArea';
-
-import { Placement_API } from '../../Api/newplacement/placementApi.js';
+import { usePlacementForm } from '../../context/PlacementFormContext.jsx';
 
 const Placement_Performance = ({ onBack, onNext }) => {
+  const { placementForm, updatePreference } = usePlacementForm()
+
   const [formData, setFormData] = useState({
-    industry: '',
-    role: '',
-    location: '',
-    relocate: 'yes',
-    availability: '',
-    workingHours: '',
-    notes: ''
+    industry: placementForm.preference.industry || '',
+    role: placementForm.preference.role || '',
+    location: placementForm.preference.location || '',
+    relocate: placementForm.preference.relocate || 'yes',
+    availability: placementForm.preference.availability || '',
+    workingHours: placementForm.preference.workingHours || '',
+    notes: placementForm.preference.notes || ''
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState(false);
 
-  const [selectedDays, setSelectedDays] = useState(['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
-  const [placement, setPlacement] = useState('on-site');
+  const [selectedDays, setSelectedDays] = useState(placementForm.preference.availableDays?.length > 0 ? placementForm.preference.availableDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']);
+  const [placement, setPlacement] = useState(placementForm.preference.placementType || 'on-site');
 
   const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -63,22 +64,14 @@ const Placement_Performance = ({ onBack, onNext }) => {
 
     if (!validate()) return;
 
-    try {
-      const payload = {
-        ...formData,
-        available_Days: selectedDays,
-        placementType: placement
-      };
+    const payload = {
+      ...formData,
+      availableDays: selectedDays,
+      placementType: placement
+    };
 
-      const response = await Placement_API(payload);
-
-      if (response?.data?.success) {
-        onNext();
-      }
-
-    } catch (error) {
-      console.log(error.message);
-    }
+    updatePreference(payload);
+    onNext();
   };
 
   return (

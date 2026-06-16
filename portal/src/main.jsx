@@ -6,14 +6,17 @@ import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { AppearanceProvider } from './context/AppearanceContext'
 import { PortalDataProvider } from './context/PortalDataContext.jsx'
+import { PlacementFormProvider } from './context/PlacementFormContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AppearanceProvider>
         <PortalDataProvider>
-          <App />
-          <Toaster position="top-right" />
+          <PlacementFormProvider>
+            <App />
+            <Toaster position="top-right" />
+          </PlacementFormProvider>
         </PortalDataProvider>
       </AppearanceProvider>
     </BrowserRouter>

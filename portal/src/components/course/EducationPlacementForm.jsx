@@ -2,30 +2,28 @@ import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { SelectField } from './SelectField';
 import { InputField } from './InputField';
-import { NewCourse } from '../../Api/newplacement/course_detailsApi.js';
+import { usePlacementForm } from '../../context/PlacementFormContext.jsx';
 
 const EducationPlacementForm = ({ onBack, onNext }) => {
+  const { placementForm, updateCourse } = usePlacementForm()
+
   const [formData, setFormData] = useState({
-    course: '',
-    institution: '',
-    courseCode: '',
-    studyStatus: '',
-    completionDate: '',
-    placementReason: 'mandatory'
+    course: placementForm.course.course || '',
+    institution: placementForm.course.institution || '',
+    courseCode: placementForm.course.courseCode || '',
+    studyStatus: placementForm.course.studyStatus || '',
+    completionDate: placementForm.course.completionDate || '',
+    placementReason: placementForm.course.placementReason || 'mandatory'
   });
 
-  const [studyMode, setStudyMode] = useState('full-time');
+  const [studyMode, setStudyMode] = useState(placementForm.course.studyMode || 'full-time');
 
   const [errors, setErrors] = useState({});
 
-  const [error, setError] = useState("");
-
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
-
 
   const validate = () => {
     const newErrors = {};
@@ -47,31 +45,17 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
 
     if (!validate()) return;
 
-    try {
-      const payload = {
-        ...formData,
-        studyMode,
-      };
-
-      const response = await NewCourse(payload);
-
-      if (response?.data?.success) {
-        onNext?.();
-      } else {
-        setError(response?.data?.message || "Failed to save details");
-      }
-    } catch (error) {
-      setError(error?.response?.data?.message || "Server error");
-    }
+    const payload = {
+      ...formData,
+      studyMode,
+    };
+    updateCourse(payload);
+    onNext?.();
   };
 
   return (
     <div className=" p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-sm">
       <form onSubmit={handleSubmit} className="space-y-6">
-
-        {error && (
-          <p className="text-red-500 text-sm">{error}</p>
-        )}
 
         {/* Course */}
         <div>

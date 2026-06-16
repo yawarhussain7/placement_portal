@@ -11,17 +11,19 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-import { PlacementDocApi } from '../../Api/newplacement/documentApi.js';
+import { usePlacementForm } from '../../context/PlacementFormContext.jsx';
 
 const My_Application = ({ onBack, onNext }) => {
+  const { placementForm, updateDocuments } = usePlacementForm()
+
   // store full file object + name safely
   const [uploadedFiles, setUploadedFiles] = useState({
-    resume: null,
-    photoId: null,
-    studentId: null,
-    transcript: null,
-    certificates: null,
-    additional: null
+    resume: placementForm.documents.resume || null,
+    photoId: placementForm.documents.photoId || null,
+    studentId: placementForm.documents.studentId || null,
+    transcript: placementForm.documents.transcript || null,
+    certificates: placementForm.documents.certificates || null,
+    additional: placementForm.documents.additional || null
   });
 
   // handle file selection
@@ -35,28 +37,10 @@ const My_Application = ({ onBack, onNext }) => {
     }));
   };
 
-  // upload all files
-  const handleUpload = async () => {
-    try {
-      const formData = new FormData();
-
-      Object.keys(uploadedFiles).forEach((key) => {
-        if (uploadedFiles[key]) {
-          formData.append(key, uploadedFiles[key]);
-        }
-      });
-
-      const result = await PlacementDocApi(formData);
-      console.log("Upload success:", result);
-
-      if(result?.data?.success){
-         onNext?.();
-      }
-      
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert("Upload failed!");
-    }
+  // save files to context and proceed
+  const handleUpload = () => {
+    updateDocuments(uploadedFiles);
+    onNext?.();
   };
 
   const documentRows = [
