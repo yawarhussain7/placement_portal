@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { getDashboardData, toggleTask as toggleTaskApi, createTicket as createTicketApi, sendMessage as sendMessageApi } from '../Api/dashboardApi.js'
 
 const PortalDataContext = createContext(null)
 
-const today = '10 Jun 2026'
+const today = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })
 
 const defaultData = {
   account: {
@@ -84,22 +85,10 @@ const defaultData = {
         { from: 'Documents Team', body: 'Your transcript file is readable, but it looks older than the latest semester. Please replace it when ready.', own: false, time: 'Yesterday' },
       ],
     },
-    {
-      id: 3,
-      name: 'Northbridge Digital',
-      role: 'Employer',
-      subject: 'Interview slot confirmation',
-      time: '08 Jun',
-      unread: false,
-      messages: [
-        { from: 'Northbridge Digital', body: 'We can meet on 18 Jun at 11:00 AM AEST. Please confirm with your advisor.', own: false, time: '08 Jun' },
-      ],
-    },
   ],
   tasks: [
     { id: 1, title: 'Upload updated academic transcript', due: 'Due today', urgent: true, done: false },
     { id: 2, title: 'Confirm Northbridge interview time', due: 'Due 12 Jun', urgent: false, done: false },
-    { id: 3, title: 'Complete placement preference section', due: 'Optional update', urgent: false, done: false },
   ],
   tickets: [
     { id: 'WM-HLP-221', subject: 'Need help with document verification', status: 'Open', date: '09 Jun 2026' },
@@ -122,10 +111,45 @@ const readSavedData = () => {
 
 export function PortalDataProvider({ children }) {
   const [data, setData] = useState(readSavedData)
+  const [loading, setLoading] = useState(true)
+  const [apiAvailable, setApiAvailable] = useState(false)
 
+  // Fetch dashboard data from backend on mount
   useEffect(() => {
-    localStorage.setItem('webmantisPortalData', JSON.stringify(data))
-  }, [data])
+    const fetchData = async () => {
+      try {
+        const response = await getDashboardData()
+        if (response?.data?.success && response?.data?.data) {
+          const apiData = response.data.data
+          setData((prev) => ({
+            ...prev,
+            account: { ...prev.account, ...apiData.account },
+            applications: apiData.applications?.length ? apiData.applications : prev.applications,
+            documents: apiData.documents?.length ? apiData.documents : prev.documents,
+            threads: apiData.threads?.length ? apiData.threads : prev.threads,
+            tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
+            tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
+            activity: apiData.activity?.length ? apiData.activity : prev.activity,
+          }))
+          setApiAvailable(true)
+        }
+      } catch {
+        // Backend not available → keep using default/localStorage data
+        console.warn('Dashboard API unavailable, using local data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Persist to localStorage whenever data changes
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem('webmantisPortalData', JSON.stringify(data))
+    }
+  }, [data, loading])
 
   const addActivity = (title, detail, type = 'application') => {
     setData((current) => ({
@@ -177,8 +201,18 @@ export function PortalDataProvider({ children }) {
       ...current,
       threads: current.threads.map((thread) => thread.id === id ? { ...thread, unread: false } : thread),
     })),
-    sendMessage: (threadId, body) => {
+    sendMessage: async (threadId, body) => {
       if (!body.trim()) return
+
+      // Try API first, fall back to local
+      if (apiAvailable) {
+        try {
+          await sendMessageApi(threadId, body)
+        } catch {
+          // fall through to local
+        }
+      }
+
       setData((current) => ({
         ...current,
         threads: current.threads.map((thread) => thread.id === threadId ? {
@@ -190,21 +224,63 @@ export function PortalDataProvider({ children }) {
         activity: [{ id: Date.now(), type: 'message', title: 'Message sent', detail: body.trim().slice(0, 80) }, ...current.activity],
       }))
     },
-    completeTask: (id) => setData((current) => ({
-      ...current,
-      tasks: current.tasks.map((task) => task.id === id ? { ...task, done: !task.done } : task),
-    })),
-    createTicket: (subject) => {
+    completeTask: async (id) => {
+      // Try API toggle, fall back to local
+      if (apiAvailable) {
+        try {
+          await toggleTaskApi(id)
+        } catch {
+          // fall through to local
+        }
+      }
+
+      setData((current) => ({
+        ...current,
+        tasks: current.tasks.map((task) => task.id === id ? { ...task, done: !task.done } : task),
+      }))
+    },
+    createTicket: async (subject) => {
       if (!subject.trim()) return
+
+      // Try API, fall back to local
+      if (apiAvailable) {
+        try {
+          await createTicketApi(subject)
+        } catch {
+          // fall through to local
+        }
+      }
+
       setData((current) => ({
         ...current,
         tickets: [{ id: `WM-HLP-${Math.floor(300 + Math.random() * 600)}`, subject: subject.trim(), status: 'Open', date: today }, ...current.tickets],
       }))
     },
     resetPortalData: () => setData(defaultData),
-  }), [])
+    refreshDashboard: async () => {
+      try {
+        const response = await getDashboardData()
+        if (response?.data?.success && response?.data?.data) {
+          const apiData = response.data.data
+          setData((prev) => ({
+            ...prev,
+            account: { ...prev.account, ...apiData.account },
+            applications: apiData.applications?.length ? apiData.applications : prev.applications,
+            documents: apiData.documents?.length ? apiData.documents : prev.documents,
+            threads: apiData.threads?.length ? apiData.threads : prev.threads,
+            tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
+            tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
+            activity: apiData.activity?.length ? apiData.activity : prev.activity,
+          }))
+          setApiAvailable(true)
+        }
+      } catch {
+        // Backend not available
+      }
+    },
+  }), [apiAvailable])
 
-  const value = useMemo(() => ({ data, ...actions }), [data, actions])
+  const value = useMemo(() => ({ data, loading, ...actions }), [data, loading, actions])
 
   return (
     <PortalDataContext.Provider value={value}>
