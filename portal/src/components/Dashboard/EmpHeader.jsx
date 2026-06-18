@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Bell, ChevronDown, User, Settings, LogOut, HelpCircle } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { usePortalData } from '../../context/PortalDataContext';
+import { logoutUser } from '../../Api/auth.js';
 
 const profileOptions = [
   { icon: User,       label: "My Profile", to: '/profile' },
@@ -13,6 +14,16 @@ const profileOptions = [
 const EmpHeader = () => {
   const navigate = useNavigate();
   const { data } = usePortalData();
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // fall through even if API fails
+    }
+    localStorage.removeItem('auth_token');
+    navigate('/auth/login');
+  };
   const [notifOpen, setNotifOpen]     = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const notifRef   = useRef(null);
@@ -83,7 +94,7 @@ const EmpHeader = () => {
             className="flex items-center space-x-1.5 hover:bg-subtle rounded-lg px-1.5 py-1 transition-colors cursor-pointer"
           >
             <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+              src={data.account.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"}
               alt="Avatar"
               className="w-9 h-9 rounded-full object-cover border border-base"
             />

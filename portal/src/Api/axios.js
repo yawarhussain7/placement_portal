@@ -1,9 +1,10 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL:'http://localhost:2000',
-    headers:{
-        "Content-Type":"application/json"
+    baseURL: 'http://localhost:2000',
+    withCredentials: true, // send cookies with every request
+    headers: {
+        "Content-Type": "application/json"
     }
 })
 

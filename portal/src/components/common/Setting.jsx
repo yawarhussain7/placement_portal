@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppearance } from '../../context/AppearanceContext';
+import { logoutUser } from '../../Api/auth.js';
 
 const Toggle = ({ checked, onChange }) => (
   <button
@@ -18,7 +19,7 @@ const Toggle = ({ checked, onChange }) => (
   </button>
 );
 
-);
+
 
 const Section = ({ title, subtitle, children }) => (
   <div className="p-6 space-y-5 border-b border-base last:border-0">
@@ -142,7 +143,12 @@ const Setting = () => {
             })}
             <hr className="my-2 border-base" />
             <button 
-              onClick={() => {
+              onClick={async () => {
+                try {
+                  await logoutUser();
+                } catch {
+                  // fall through even if API fails
+                }
                 localStorage.removeItem('auth_token');
                 toast.success('Logged out successfully. See you soon!');
                 setTimeout(() => navigate('/auth/login'), 500);

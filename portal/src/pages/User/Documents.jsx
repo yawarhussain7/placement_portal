@@ -1,6 +1,7 @@
 import Template from '../../components/common/Template'
-import { CheckCircle2, Download, FileCheck2, FileText, GraduationCap, IdCard, Upload } from 'lucide-react'
+import { CheckCircle2, Download, FileCheck2, FileText, GraduationCap, IdCard, Upload, Trash2 } from 'lucide-react'
 import { usePortalData } from '../../context/PortalDataContext'
+import { downloadDocument as downloadDocumentApi } from '../../Api/documentApi'
 
 const iconForTitle = (title) => {
   if (title.toLowerCase().includes('id')) return IdCard
@@ -9,7 +10,36 @@ const iconForTitle = (title) => {
 }
 
 export default function Documents() {
-  const { data, uploadDocument, addDocument, verifyDocument } = usePortalData()
+  const { data, uploadDocument, addDocument, verifyDocument, removeDocument } = usePortalData()
+
+  const handleDownload = async (doc) => {
+    try {
+      const response = await downloadDocumentApi(doc.id)
+      // Create a blob URL and trigger download
+      const blob = new Blob([response.data])
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', doc.fileName || 'document')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('Failed to download document. Please try again.')
+    }
+  }
+
+  const handleDelete = async (docId) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return
+    try {
+      await removeDocument(docId)
+    } catch (error) {
+      console.error('Delete failed:', error)
+      alert('Failed to delete document. Please try again.')
+    }
+  }
 
   return (
     <Template title="Documents" description="Manage documents used across placement applications">
@@ -43,6 +73,7 @@ export default function Documents() {
           <div className="divide-y divide-base">
             {data.documents.map((doc) => {
               const Icon = iconForTitle(doc.title)
+              const hasFile = doc.fileName && doc.fileName !== 'No file selected' && doc.fileName !== ''
               return (
                 <div key={doc.id} className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                   <div className="flex items-start gap-4">
@@ -62,9 +93,11 @@ export default function Documents() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 self-end lg:self-center">
-                    <button className="p-2 border border-base rounded-lg text-secondary hover:bg-subtle" title="Download">
-                      <Download size={16} />
-                    </button>
+                    {hasFile && (
+                      <button onClick={() => handleDownload(doc)} className="p-2 border border-base rounded-lg text-secondary hover:bg-subtle" title="Download">
+                        <Download size={16} />
+                      </button>
+                    )}
                     {doc.status !== 'Verified' && (
                       <button onClick={() => verifyDocument(doc.id)} className="inline-flex items-center gap-2 px-3 py-2 border border-base text-secondary rounded-lg text-xs font-bold hover:bg-subtle">
                         <CheckCircle2 size={14} />
@@ -76,6 +109,11 @@ export default function Documents() {
                       Replace
                       <input type="file" className="hidden" onChange={(event) => uploadDocument(doc.id, event.target.files?.[0])} />
                     </label>
+                    {hasFile && (
+                      <button onClick={() => handleDelete(doc.id)} className="p-2 border border-red-200 rounded-lg text-red-500 hover:bg-red-50" title="Delete">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               )

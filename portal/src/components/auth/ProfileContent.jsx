@@ -1,18 +1,20 @@
 import { useState, useRef } from 'react';
-import { Camera, MapPin, Link as LinkIcon, Calendar, Mail, User, Globe, Check, X } from 'lucide-react';
+import { Camera, MapPin, Link as LinkIcon, Calendar, Mail, User, Globe, Check, X, Loader2 } from 'lucide-react';
 import { usePortalData } from '../../context/PortalDataContext';
+import { updateProfile } from '../../Api/profileApi.js';
 
 const ProfileContent = () => {
   const { data, updateAccount } = usePortalData();
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
     name: data.account.fullName,
     username: 'alexmorgan',
-    bio: 'Senior Full Stack Developer & UI Designer. Building open-source tools and exploring the future of modular web applications. 🚀',
+    bio: data.account.bio || 'Senior Full Stack Developer & UI Designer. Building open-source tools and exploring the future of modular web applications. 🚀',
     location: 'San Francisco, CA',
     website: 'https://alexmorgan.dev',
     joinedDate: 'Joined March 2022',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256',
+    avatar: data.account.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256&h=256',
     cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200&h=400',
     stats: [
       { label: 'Projects', value: '42' },
@@ -21,6 +23,8 @@ const ProfileContent = () => {
     ],
   });
   const [draft, setDraft] = useState(profile);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
   const avatarRef = useRef(null);
   const coverRef = useRef(null);
 
@@ -28,19 +32,66 @@ const ProfileContent = () => {
 
   const handleAvatarChange = e => {
     const file = e.target.files[0];
-    if (file) set('avatar')(URL.createObjectURL(file));
+    if (file) {
+      setAvatarFile(file);
+      set('avatar')(URL.createObjectURL(file));
+    }
   };
 
   const handleCoverChange = e => {
     const file = e.target.files[0];
-    if (file) set('cover')(URL.createObjectURL(file));
+    if (file) {
+      setCoverFile(file);
+      set('cover')(URL.createObjectURL(file));
+    }
   };
 
-  const handleSave = e => {
+  const handleSave = async e => {
     e.preventDefault();
-    setProfile(draft);
-    updateAccount({ ...data.account, fullName: draft.name });
-    setEditing(false);
+    setSaving(true);
+
+    try {
+      // Get userId from the token or localStorage
+      const token = localStorage.getItem('auth_token');
+      let userId = null;
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          userId = payload.id;
+        } catch {}
+      }
+
+      let savedAvatar = profile.avatar; // keep the old avatar by default
+
+      if (userId) {
+        const formData = new FormData();
+        if (avatarFile) formData.append('avatar', avatarFile);
+        if (draft.name !== profile.name) formData.append('username', draft.name);
+        if (draft.bio !== profile.bio) formData.append('bio', draft.bio);
+
+        const response = await updateProfile(userId, formData);
+        if (response?.data?.success && response?.data?.data?.avatar) {
+          // Use the real URL returned from the server for persistence
+          savedAvatar = response.data.data.avatar;
+        }
+      }
+
+      // If no new avatar was uploaded, keep the old one
+      const finalAvatar = avatarFile ? savedAvatar : draft.avatar;
+
+      setProfile(prev => ({ ...prev, avatar: finalAvatar }));
+      updateAccount({ ...data.account, fullName: draft.name, avatar: finalAvatar, bio: draft.bio });
+      setEditing(false);
+      setAvatarFile(null);
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      // Still update locally even if API fails — use the blob URL as fallback
+      setProfile(draft);
+      updateAccount({ ...data.account, fullName: draft.name, avatar: draft.avatar, bio: draft.bio });
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {

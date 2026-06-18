@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { getDashboardData, toggleTask as toggleTaskApi, createTicket as createTicketApi, sendMessage as sendMessageApi } from '../Api/dashboardApi.js'
+import { getDocuments as getDocumentsApi, uploadDocument as uploadDocumentApi, replaceDocument as replaceDocumentApi, deleteDocument as deleteDocumentApi } from '../Api/documentApi.js'
 
 const PortalDataContext = createContext(null)
 
@@ -176,8 +177,16 @@ export function PortalDataProvider({ children }) {
         activity: [{ id: Date.now(), type: 'application', title: 'Application draft created', detail: `${application.role} added for ${application.company}.` }, ...current.activity],
       }))
     },
-    uploadDocument: (id, file) => {
+    uploadDocument: async (id, file) => {
       if (!file) return
+      try {
+        // Try backend API first
+        if (apiAvailable) {
+          await replaceDocumentApi(id, file)
+        }
+      } catch {
+        // Fall back to local
+      }
       const type = file.name.split('.').pop()?.toUpperCase() || 'FILE'
       setData((current) => ({
         ...current,
@@ -185,8 +194,25 @@ export function PortalDataProvider({ children }) {
         activity: [{ id: Date.now(), type: 'document', title: 'Document uploaded', detail: `${file.name} was added to the document library.` }, ...current.activity],
       }))
     },
-    addDocument: (file) => {
+    addDocument: async (file) => {
       if (!file) return
+      try {
+        // Try backend API first
+        if (apiAvailable) {
+          const response = await uploadDocumentApi(file)
+          if (response?.data?.success && response?.data?.data) {
+            const newDoc = response.data.data
+            setData((current) => ({
+              ...current,
+              documents: [newDoc, ...current.documents],
+              activity: [{ id: Date.now(), type: 'document', title: 'Document uploaded', detail: `${file.name} was added to the document library.` }, ...current.activity],
+            }))
+            return
+          }
+        }
+      } catch {
+        // Fall back to local
+      }
       const type = file.name.split('.').pop()?.toUpperCase() || 'FILE'
       setData((current) => ({
         ...current,
@@ -197,6 +223,35 @@ export function PortalDataProvider({ children }) {
       ...current,
       documents: current.documents.map((doc) => doc.id === id ? { ...doc, status: 'Verified', updated: today } : doc),
     })),
+    removeDocument: async (id) => {
+      try {
+        // Try backend API first
+        if (apiAvailable) {
+          await deleteDocumentApi(id)
+        }
+      } catch {
+        // Fall back to local
+      }
+      setData((current) => ({
+        ...current,
+        documents: current.documents.filter((doc) => doc.id !== id),
+        activity: [{ id: Date.now(), type: 'document', title: 'Document deleted', detail: `Document was removed.` }, ...current.activity],
+      }))
+    },
+    refreshDocuments: async () => {
+      try {
+        const response = await getDocumentsApi()
+        if (response?.data?.success && response?.data?.data) {
+          setData((current) => ({
+            ...current,
+            documents: response.data.data,
+          }))
+          setApiAvailable(true)
+        }
+      } catch {
+        // Backend not available
+      }
+    },
     markThreadRead: (id) => setData((current) => ({
       ...current,
       threads: current.threads.map((thread) => thread.id === id ? { ...thread, unread: false } : thread),
