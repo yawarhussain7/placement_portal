@@ -15,7 +15,6 @@ export default function Documents() {
   const handleDownload = async (doc) => {
     try {
       const response = await downloadDocumentApi(doc.id)
-      // Create a blob URL and trigger download
       const blob = new Blob([response.data])
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -43,28 +42,30 @@ export default function Documents() {
 
   return (
     <Template title="Documents" description="Manage documents used across placement applications">
-      <div className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-4 sm:space-y-5">
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             ['Total files', data.documents.length],
             ['Verified', data.documents.filter((doc) => doc.status === 'Verified').length],
             ['Needs action', data.documents.filter((doc) => doc.status === 'Needs Update').length],
           ].map(([label, value]) => (
-            <div key={label} className="card border rounded-lg p-5">
-              <p className="text-xs font-semibold text-muted">{label}</p>
-              <p className="text-2xl font-bold text-primary mt-1">{value}</p>
+            <div key={label} className="card border rounded-lg p-4 sm:p-5">
+              <p className="text-[11px] sm:text-xs font-semibold text-muted">{label}</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary mt-1">{value}</p>
             </div>
           ))}
         </div>
 
+        {/* Document library */}
         <div className="card border rounded-lg overflow-hidden">
-          <div className="p-5 border-b border-base flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="p-4 sm:p-5 border-b border-base flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 className="font-bold text-primary">Document Library</h2>
+              <h2 className="text-sm sm:text-base font-bold text-primary">Document Library</h2>
               <p className="text-xs text-muted mt-1">Upload, replace, and verify reusable placement files.</p>
             </div>
-            <label className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-accent hover-accent rounded-lg text-white text-sm font-semibold cursor-pointer">
-              <Upload size={16} />
+            <label className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-accent hover-accent rounded-lg text-white text-xs sm:text-sm font-semibold cursor-pointer transition-colors self-start sm:self-auto">
+              <Upload size={14} className="sm:size-4" />
               Upload New
               <input type="file" className="hidden" onChange={(event) => addDocument(event.target.files?.[0])} />
             </label>
@@ -75,43 +76,43 @@ export default function Documents() {
               const Icon = iconForTitle(doc.title)
               const hasFile = doc.fileName && doc.fileName !== 'No file selected' && doc.fileName !== ''
               return (
-                <div key={doc.id} className="p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-11 h-11 rounded-lg bg-accent-subtle text-accent flex items-center justify-center flex-shrink-0">
-                      <Icon size={21} />
+                <div key={doc.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-accent-subtle text-accent flex items-center justify-center flex-shrink-0">
+                      <Icon size={18} className="sm:size-[21px]" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-primary">{doc.title}</h3>
-                      <p className="text-xs text-muted mt-1">{doc.type} - {doc.fileName || 'No file selected'} - Last updated: {doc.updated}</p>
-                      <span className={`inline-flex items-center gap-1 mt-2 text-[11px] font-bold px-2 py-1 rounded-full ${
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-base font-bold text-primary">{doc.title}</h3>
+                      <p className="text-[11px] sm:text-xs text-muted mt-1 truncate">{doc.type} — {doc.fileName || 'No file selected'} — Updated: {doc.updated}</p>
+                      <span className={`inline-flex items-center gap-1 mt-2 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 sm:py-1 rounded-full ${
                         doc.status === 'Verified' ? 'bg-accent-subtle text-accent' : doc.status === 'Needs Update' ? 'bg-amber-50 text-amber-700' : 'bg-subtle text-secondary'
                       }`}>
-                        <FileCheck2 size={12} />
+                        <FileCheck2 size={11} className="sm:size-3" />
                         {doc.status}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 self-end lg:self-center">
+                  <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
                     {hasFile && (
-                      <button onClick={() => handleDownload(doc)} className="p-2 border border-base rounded-lg text-secondary hover:bg-subtle" title="Download">
-                        <Download size={16} />
+                      <button onClick={() => handleDownload(doc)} className="p-1.5 sm:p-2 border border-base rounded-lg text-secondary hover:bg-subtle transition-colors" title="Download">
+                        <Download size={14} className="sm:size-4" />
                       </button>
                     )}
                     {doc.status !== 'Verified' && (
-                      <button onClick={() => verifyDocument(doc.id)} className="inline-flex items-center gap-2 px-3 py-2 border border-base text-secondary rounded-lg text-xs font-bold hover:bg-subtle">
-                        <CheckCircle2 size={14} />
-                        Mark Verified
+                      <button onClick={() => verifyDocument(doc.id)} className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 border border-base text-secondary rounded-lg text-[11px] sm:text-xs font-bold hover:bg-subtle transition-colors">
+                        <CheckCircle2 size={13} className="sm:size-[14px]" />
+                        Verify
                       </button>
                     )}
-                    <label className="inline-flex items-center gap-2 px-3 py-2 border border-accent text-accent rounded-lg text-xs font-bold cursor-pointer hover:bg-accent-subtle">
-                      <Upload size={14} />
+                    <label className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 border border-accent text-accent rounded-lg text-[11px] sm:text-xs font-bold cursor-pointer hover:bg-accent-subtle transition-colors">
+                      <Upload size={13} className="sm:size-[14px]" />
                       Replace
                       <input type="file" className="hidden" onChange={(event) => uploadDocument(doc.id, event.target.files?.[0])} />
                     </label>
                     {hasFile && (
-                      <button onClick={() => handleDelete(doc.id)} className="p-2 border border-red-200 rounded-lg text-red-500 hover:bg-red-50" title="Delete">
-                        <Trash2 size={16} />
+                      <button onClick={() => handleDelete(doc.id)} className="p-1.5 sm:p-2 border border-red-200 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Delete">
+                        <Trash2 size={14} className="sm:size-4" />
                       </button>
                     )}
                   </div>

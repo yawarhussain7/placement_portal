@@ -27,17 +27,17 @@ const Dashboard = () => {
     <DashboardLayout>
 
       {/* HEADER SECTION */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
           Welcome, {data.account.fullName}
         </h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-xs sm:text-sm text-gray-500">
           Your placement dashboard overview
         </p>
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
 
         <StatCard
           label="Active Applications"
@@ -69,13 +69,13 @@ const Dashboard = () => {
       </div>
 
       {/* APPLICATIONS */}
-      <div className="bg-white border rounded-xl p-5 mb-6">
+      <div className="bg-white border rounded-xl p-4 sm:p-5 mb-6">
 
-        <h2 className="font-semibold text-gray-800 mb-4">
+        <h2 className="text-sm sm:text-base font-semibold text-gray-800 mb-3 sm:mb-4">
           Applications
         </h2>
 
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
           {data.applications.map(app => (
             <ApplicationProgressCard key={app.id} app={app} />
           ))}

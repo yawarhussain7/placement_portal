@@ -7,7 +7,7 @@ import {
 
 export default function Sidebar() {
   return (
-    <aside className="sidebar-surface w-64 border-r hidden md:flex flex-col justify-between p-4 sticky top-0 h-screen flex-shrink-0">
+    <aside className="sidebar-surface w-64 border-r hidden lg:flex flex-col justify-between p-4 sticky top-0 h-screen flex-shrink-0">
       <div className="space-y-1">
         <div className="flex items-center space-x-3 px-3 py-4 mb-4">
           <div className="w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center font-bold text-sm" style={{ color: '#fff' }}>

@@ -7,16 +7,19 @@ import { BrowserRouter } from 'react-router-dom'
 import { AppearanceProvider } from './context/AppearanceContext'
 import { PortalDataProvider } from './context/PortalDataContext.jsx'
 import { PlacementFormProvider } from './context/PlacementFormContext.jsx'
+import { SocketProvider } from './context/SocketContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AppearanceProvider>
         <PortalDataProvider>
-          <PlacementFormProvider>
-            <App />
-            <Toaster position="top-right" />
-          </PlacementFormProvider>
+          <SocketProvider>
+            <PlacementFormProvider>
+              <App />
+              <Toaster position="top-right" />
+            </PlacementFormProvider>
+          </SocketProvider>
         </PortalDataProvider>
       </AppearanceProvider>
     </BrowserRouter>

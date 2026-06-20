@@ -22,6 +22,7 @@ const EmpHeader = () => {
       // fall through even if API fails
     }
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('webmantisPortalData');
     navigate('/auth/login');
   };
   const [notifOpen, setNotifOpen]     = useState(false);

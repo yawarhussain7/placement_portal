@@ -24,7 +24,12 @@ export default function SignInForm() {
       const token = response?.data?.data?.token;
       if (token) {
         localStorage.setItem('auth_token', token);
+        // Dispatch a custom event so PortalDataContext re-fetches immediately
+        window.dispatchEvent(new Event('auth-token-changed'));
       }
+
+      // Clear any stale cached portal data so the new user's data loads fresh
+      localStorage.removeItem('webmantisPortalData');
 
       toast.success("Welcome back!");
       setTimeout(() => navigate("/dashboard"), 500);

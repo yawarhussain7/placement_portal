@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { getDashboardData, toggleTask as toggleTaskApi, createTicket as createTicketApi, sendMessage as sendMessageApi } from '../Api/dashboardApi.js'
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { getDashboardData, toggleTask as toggleTaskApi, createTicket as createTicketApi } from '../Api/dashboardApi.js'
 import { getDocuments as getDocumentsApi, uploadDocument as uploadDocumentApi, replaceDocument as replaceDocumentApi, deleteDocument as deleteDocumentApi } from '../Api/documentApi.js'
+import { getConversations as getConversationsApi, createOrGetConversation as createConversationApi, sendMessage as sendConversationMessageApi } from '../Api/conversationApi.js'
 
 const PortalDataContext = createContext(null)
 
@@ -101,56 +102,94 @@ const defaultData = {
   ],
 }
 
-const readSavedData = () => {
-  try {
-    const saved = localStorage.getItem('webmantisPortalData')
-    return saved ? { ...defaultData, ...JSON.parse(saved) } : defaultData
-  } catch {
-    return defaultData
-  }
-}
-
 export function PortalDataProvider({ children }) {
-  const [data, setData] = useState(readSavedData)
+  const [data, setData] = useState(defaultData)
   const [loading, setLoading] = useState(true)
   const [apiAvailable, setApiAvailable] = useState(false)
 
-  // Fetch dashboard data from backend on mount
+  // Read auth token from localStorage to detect login/logout changes
+  const [authToken, setAuthToken] = useState(() => localStorage.getItem('auth_token'))
+
+  // Listen for auth token changes (login/logout in other tabs/windows too)
   useEffect(() => {
-    const fetchData = async () => {
+    const handleStorage = (e) => {
+      if (e.key === 'auth_token') {
+        setAuthToken(e.newValue)
+      }
+    }
+
+    // Custom event fired directly by SignInForm/SignUpForm for immediate refresh
+    const handleCustomEvent = () => {
+      const current = localStorage.getItem('auth_token')
+      setAuthToken(current)
+    }
+
+    // Poll for auth token changes (backup for non-reactive scenarios)
+    const interval = setInterval(() => {
+      const current = localStorage.getItem('auth_token')
+      setAuthToken((prev) => (prev !== current ? current : prev))
+    }, 1000)
+
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener('auth-token-changed', handleCustomEvent)
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('auth-token-changed', handleCustomEvent)
+      clearInterval(interval)
+    }
+  }, [])
+
+  // Fetch all data from backend whenever auth token changes
+  // This ensures fresh data loads when logging in as a different user
+  useEffect(() => {
+    const fetchAllData = async () => {
+      if (!authToken) {
+        // No auth token → reset to defaults (logged out state)
+        setData(defaultData)
+        setLoading(false)
+        setApiAvailable(false)
+        return
+      }
+
+      setLoading(true)
+      setData(defaultData) // Reset to defaults first to clear stale data
       try {
-        const response = await getDashboardData()
-        if (response?.data?.success && response?.data?.data) {
-          const apiData = response.data.data
+        const [dashboardRes, conversationsRes] = await Promise.allSettled([
+          getDashboardData(),
+          getConversationsApi(),
+        ])
+
+        // Dashboard data
+        if (dashboardRes.status === 'fulfilled' && dashboardRes.value?.data?.success && dashboardRes.value?.data?.data) {
+          const apiData = dashboardRes.value.data.data
           setData((prev) => ({
             ...prev,
             account: { ...prev.account, ...apiData.account },
             applications: apiData.applications?.length ? apiData.applications : prev.applications,
             documents: apiData.documents?.length ? apiData.documents : prev.documents,
-            threads: apiData.threads?.length ? apiData.threads : prev.threads,
             tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
             tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
             activity: apiData.activity?.length ? apiData.activity : prev.activity,
           }))
           setApiAvailable(true)
         }
+
+        // Conversations (shared two-way messaging)
+        if (conversationsRes.status === 'fulfilled' && conversationsRes.value?.data?.success && Array.isArray(conversationsRes.value.data.data)) {
+          setData((prev) => ({
+            ...prev,
+            threads: conversationsRes.value.data.data,
+          }))
+        }
       } catch {
-        // Backend not available → keep using default/localStorage data
-        console.warn('Dashboard API unavailable, using local data')
+        console.warn('API unavailable, using default data')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchData()
-  }, [])
-
-  // Persist to localStorage whenever data changes
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem('webmantisPortalData', JSON.stringify(data))
-    }
-  }, [data, loading])
+    fetchAllData()
+  }, [authToken])
 
   const addActivity = (title, detail, type = 'application') => {
     setData((current) => ({
@@ -252,6 +291,72 @@ export function PortalDataProvider({ children }) {
         // Backend not available
       }
     },
+    createThread: async (name, role, subject, message, participantId) => {
+      // Use the shared conversation API if available
+      if (apiAvailable && participantId) {
+        try {
+          const response = await createConversationApi(participantId, subject)
+          if (response?.data?.success && response?.data?.data) {
+            const conv = response.data.data
+            const convId = conv._id?.toString() || conv.id
+            // If it already existed, we need to refresh conversations
+            if (response.data.existing) {
+              // Refresh conversations to get the latest
+              const refreshRes = await getConversationsApi()
+              if (refreshRes?.data?.success && Array.isArray(refreshRes.data.data)) {
+                setData((current) => ({
+                  ...current,
+                  threads: refreshRes.data.data,
+                }))
+              }
+              return convId
+            }
+            // New conversation — add to local state
+            const otherParticipantId = conv.participants?.find(
+              (p) => p.toString() !== participantId.toString()
+            )
+            const otherName = conv.participantNames?.[otherParticipantId?.toString()] || name
+            const newThread = {
+              id: convId,
+              name: otherName,
+              role: role || 'Registered User',
+              subject: conv.subject || subject || 'New conversation',
+              time: 'Just now',
+              unread: false,
+              messages: [],
+            }
+            setData((current) => ({
+              ...current,
+              threads: [newThread, ...current.threads],
+              activity: [{ id: Date.now(), type: 'message', title: 'New conversation', detail: `Started conversation with ${otherName}` }, ...current.activity],
+            }))
+            return convId
+          }
+        } catch {
+          // fall through to local
+        }
+      }
+
+      // Fallback: local-only thread
+      const newId = Date.now()
+      const newThread = {
+        id: newId,
+        name,
+        role: role || 'Registered User',
+        subject: subject || 'New conversation',
+        time: 'Just now',
+        unread: false,
+        messages: message
+          ? [{ from: 'You', body: message, own: true, time: 'Just now' }]
+          : [{ from: name, body: `Conversation started with ${name}`, own: false, time: 'Just now' }],
+      }
+      setData((current) => ({
+        ...current,
+        threads: [newThread, ...current.threads],
+        activity: [{ id: Date.now(), type: 'message', title: 'New conversation', detail: `Started conversation with ${name}` }, ...current.activity],
+      }))
+      return newId
+    },
     markThreadRead: (id) => setData((current) => ({
       ...current,
       threads: current.threads.map((thread) => thread.id === id ? { ...thread, unread: false } : thread),
@@ -259,10 +364,10 @@ export function PortalDataProvider({ children }) {
     sendMessage: async (threadId, body) => {
       if (!body.trim()) return
 
-      // Try API first, fall back to local
+      // Try shared conversation API first
       if (apiAvailable) {
         try {
-          await sendMessageApi(threadId, body)
+          await sendConversationMessageApi(threadId, body)
         } catch {
           // fall through to local
         }
