@@ -1,0 +1,59 @@
+import express from 'express'
+import http from 'http'
+import dotenv from 'dotenv'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import connectDB from './config/dbconfig.js'
+import { verifyToken, optionalAuth } from './middleware/auth.middleware.js'
+import { initSocketServer } from './socket/socketServer.js'
+
+dotenv.config()
+
+const PORT = process.env.PORT || 4000
+const app = express()
+
+app.use(express.json())
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}))
+app.use(cookieParser())
+
+const server = http.createServer(app)
+initSocketServer(server)
+
+import AuthRoute from './routes/User.route.js'
+import UserProfile_Route from './routes/UserProfile.route.js'
+import Placement_Submit_Route from './routes/newPlacement/placement_submit.route.js'
+import Dashboard_Route from './routes/dashboard/dashboard.route.js'
+import Users_Route from './routes/dashboard/users.route.js'
+import Conversation_Route from './routes/dashboard/conversation.route.js'
+import Document_Route from './routes/document.route.js'
+
+connectDB()
+
+app.get('/test', (req, res) => {
+    res.send("Hello world")
+})
+
+// upload files
+app.use('/uploads', express.static('uploads'))
+
+// auth route (public)
+app.use('/auth', AuthRoute)
+// profile routes (protected)
+app.use('/profile', verifyToken, UserProfile_Route)
+app.use('/new-placement', verifyToken, Placement_Submit_Route)
+app.use('/dashboard', optionalAuth, Dashboard_Route)
+app.use('/documents', verifyToken, Document_Route)
+app.use('/users', verifyToken, Users_Route)
+app.use('/conversations', verifyToken, Conversation_Route)
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+    res.status(404).json({ message: `Route ${req.originalUrl} not found`, success: false });
+})
+
+server.listen(PORT, ()=>{
+    console.log(`Server is running on port: http://localhost:${PORT}`)
+})
