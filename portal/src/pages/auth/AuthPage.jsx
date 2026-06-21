@@ -15,7 +15,7 @@ export default function AuthPage({url}) {
   }, [url]);
   return (
     // Changed h-screen to min-h-screen to let flex-col work naturally with viewports
-    <div className="h-full w-full bg-slate-50 flex flex-col antialiased text-slate-800">
+    <div className="h-screen w-full bg-slate-50 flex flex-col antialiased text-slate-800 overflow-hidden">
       
       <header className="bg-white border-b border-slate-100 h-11 px-6 flex items-center justify-between shadow-sm shrink-0">
         <div className="flex items-center space-x-2">
