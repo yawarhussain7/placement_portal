@@ -48,7 +48,7 @@ const SignIn = () => {
 
         <button
           type="submit"
-          className="w-full mt-2 bg-[#22C55E] text-white py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-[#16A34A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#22C55E] transition-colors"
+          className="cursor-pointer w-full mt-2 bg-[#22C55E] text-white py-2.5 px-4 rounded-lg font-medium text-sm hover:bg-[#16A34A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#22C55E] transition-colors"
         >
           Sign In
         </button>

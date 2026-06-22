@@ -1,20 +1,25 @@
 import React from 'react'
 import {Routes,Route} from 'react-router-dom'
-import AdminLayout from '../layout/AdminLayout'
 import AdminDashboard from '../pages/AdminDashboard'
-import StudentDashboard from '../pages/StudentDashboard'
+import StudentsData from '../pages/StudentsData'
 import AdminDocumentsDashboard from '../pages/AdminDocumentsDashboard'
+import Applications from '../pages/Applications'
+import SettingRoute from './SettingRoute'
+
+import PlacementData from '../pages/PlacementData'
+import Report from '../pages/Report'
 
 const AdminRoute = () => {
   return (
-    <>
     <Routes>
         <Route path='/dashboard' element={<AdminDashboard/>}/>
-        <Route path='/students' element={<StudentDashboard/>}/>
+        <Route path='/students' element={<StudentsData/>}/>
         <Route path='/documents' element={<AdminDocumentsDashboard/>}/>
+        <Route path='/applications' element={<Applications/>}/>
+        <Route path='/settings/*' element={<SettingRoute/>}/>
+        <Route path='/placement' element={<PlacementData/>}/>
+        <Route path='/reports' element={<Report/>}/>
     </Routes>
-    
-    </>
   )
 }
 

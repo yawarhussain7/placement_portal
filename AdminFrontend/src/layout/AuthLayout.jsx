@@ -31,18 +31,18 @@ const AuthLayout = ({ children, title, subtitle }) => {
       </div>
 
       {/* Right Side: Authentication Forms */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 overflow-y-auto">
-        <div className="w-full max-w-md bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-md bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
           {/* Mobile Logo View */}
-          <div className="flex items-center gap-2 lg:hidden mb-6">
+          <div className="flex items-center gap-2 lg:hidden mb-4">
             <div className="bg-[#22C55E] p-1.5 rounded-md text-white">
               <FiHexagon className="w-5 h-5" />
             </div>
             <span className="font-bold text-lg text-gray-900">Webmantis</span>
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">{title}</h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{title}</h2>
             <p className="text-sm text-gray-500">{subtitle}</p>
           </div>
 
