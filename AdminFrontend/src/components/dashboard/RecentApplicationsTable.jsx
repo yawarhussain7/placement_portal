@@ -53,7 +53,7 @@ const RecentApplicationsTable = () => {
                   </span>
                 </td>
                 <td className="px-6 py-3.5 text-right">
-                  <button className="text-xs font-bold text-emerald-600 hover:text-emerald-800 bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100/30 px-2.5 py-1 rounded transition-colors">
+                  <button className="text-xs font-bold text-green-600 hover:text-emerald-800 bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100/30 px-2.5 py-1 rounded transition-colors">
                     View
                   </button>
                 </td>
