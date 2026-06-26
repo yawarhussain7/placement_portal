@@ -222,7 +222,7 @@ export default function Messages() {
     setMessage('')
   }
 
-  // ── Socket.IO: Real-time message reception ──
+  // ── Socket.IO: Show local toast notification for new messages in other threads ──
   useEffect(() => {
     if (!socket) return
 
@@ -230,24 +230,20 @@ export default function Messages() {
       const { conversationId, message: msg } = payload
       if (!conversationId || !msg) return
 
-      // Show a brief notification
-      setSocketNotif(`${msg.from}: ${msg.body.slice(0, 40)}${msg.body.length > 40 ? '...' : ''}`)
-      setTimeout(() => setSocketNotif(null), 4000)
-
-      markThreadRead(conversationId)
-    })
-
-    const cleanupConversation = socket.onNewConversation((payload) => {
-      const { conversation } = payload
-      if (!conversation) return
-      console.log('[Socket] New conversation created:', conversation)
+      // Show toast notification if we are not currently viewing this conversation
+      if (conversationId?.toString() !== activeId?.toString()) {
+        setSocketNotif(`${msg.from}: ${msg.body.slice(0, 40)}${msg.body.length > 40 ? '...' : ''}`)
+        setTimeout(() => setSocketNotif(null), 4000)
+      } else {
+        // If we are actively viewing it, mark it as read immediately
+        markThreadRead(conversationId)
+      }
     })
 
     return () => {
       cleanupMessage()
-      cleanupConversation()
     }
-  }, [socket, markThreadRead])
+  }, [socket, activeId, markThreadRead])
 
   // Fetch registered users when modal opens
   useEffect(() => {

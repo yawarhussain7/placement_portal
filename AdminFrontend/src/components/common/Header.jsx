@@ -27,6 +27,16 @@ const Header = ({
     callback();
   };
 
+  const handleLogout = () => {
+    setShowUserDropdown(false);
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    if (onLogout) {
+      onLogout();
+    }
+    navigate('/signIn');
+  };
+
   return (
     <header className="relative bg-white border-b border-gray-100 shadow-2xs z-30 antialiased selection:bg-green-100 selection:text-green-900">
       <div className="flex items-center justify-between px-6 md:px-8 py-3.5">
@@ -158,7 +168,7 @@ const Header = ({
 
                 <button
                   type="button"
-                  onClick={() => handleAction(onLogout)}
+                  onClick={handleLogout}
                   className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50/60 transition-all text-left cursor-pointer focus:outline-none"
                 >
                   <FiLogOut className="w-3.5 h-3.5 text-red-500" />

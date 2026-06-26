@@ -384,6 +384,88 @@ export function PortalDataProvider({ children }) {
         activity: [{ id: Date.now(), type: 'message', title: 'Message sent', detail: body.trim().slice(0, 80) }, ...current.activity],
       }))
     },
+    receiveMessage: (conversationId, message) => {
+      if (!conversationId || !message) return
+      setData((current) => {
+        const threadExists = current.threads.some((t) => t.id?.toString() === conversationId?.toString())
+        if (!threadExists) {
+          // If the thread doesn't exist locally, trigger dashboard data fetch to retrieve the thread
+          getDashboardData()
+            .then(res => {
+              if (res?.data?.success && res?.data?.data) {
+                const apiData = res.data.data
+                setData(prev => ({
+                  ...prev,
+                  account: { ...prev.account, ...apiData.account },
+                  applications: apiData.applications?.length ? apiData.applications : prev.applications,
+                  documents: apiData.documents?.length ? apiData.documents : prev.documents,
+                  threads: apiData.threads?.length ? apiData.threads : prev.threads,
+                  tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
+                  tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
+                  activity: apiData.activity?.length ? apiData.activity : prev.activity,
+                }))
+              }
+            })
+            .catch(() => {})
+          return current
+        }
+
+        return {
+          ...current,
+          threads: current.threads.map((thread) => {
+            if (thread.id?.toString() === conversationId?.toString()) {
+              // Avoid duplicates
+              const msgExists = thread.messages.some((m) => 
+                (m._id && m._id === message._id) || 
+                (m.body === message.body && m.from === message.from)
+              )
+              if (msgExists) return thread
+              
+              return {
+                ...thread,
+                time: message.time || 'Just now',
+                unread: true,
+                messages: [...thread.messages, {
+                  _id: message._id,
+                  from: message.from,
+                  body: message.body,
+                  own: message.own || false,
+                  time: message.time || 'Just now'
+                }]
+              }
+            }
+            return thread
+          })
+        }
+      })
+    },
+    receiveConversation: (conversation) => {
+      if (!conversation) return
+      setData((current) => {
+        const threadId = conversation.id?.toString() || conversation._id?.toString()
+        const threadExists = current.threads.some((t) => t.id?.toString() === threadId)
+        if (threadExists) return current
+
+        const newThread = {
+          id: threadId,
+          name: conversation.name,
+          role: conversation.role || 'Registered User',
+          subject: conversation.subject || 'New conversation',
+          time: conversation.time || 'Just now',
+          unread: conversation.unread ?? true,
+          messages: conversation.messages || []
+        }
+
+        return {
+          ...current,
+          threads: [newThread, ...current.threads],
+          activity: [
+            { id: Date.now(), type: 'message', title: 'New conversation', detail: `Started conversation with ${conversation.name}` },
+            ...current.activity
+          ]
+        }
+      })
+    },
     completeTask: async (id) => {
       // Try API toggle, fall back to local
       if (apiAvailable) {
