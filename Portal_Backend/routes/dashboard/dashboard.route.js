@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getDashboard, addTask, toggleTaskDone, addThread, addMessage, addTicket } from '../../controller/dashboard/dashboard.controller.js'
+import { getDashboard, addTask, toggleTaskDone, addThread, addMessage, addTicket, getAdminStats, getAdminStudents, getAdminDocuments } from '../../controller/dashboard/dashboard.controller.js'
 
 const router = Router()
 
@@ -16,5 +16,10 @@ router.post('/thread/:id/message', addMessage)
 
 // Tickets
 router.post('/ticket', addTicket)
+
+// Admin analytics & data endpoints
+router.get('/admin/stats', getAdminStats)
+router.get('/admin/students', getAdminStudents)
+router.get('/admin/documents', getAdminDocuments)
 
 export default router

@@ -29,6 +29,9 @@ export const Update_Profile = async (userId, userData) => {
     if (userData.avatar !== undefined) {
         updateFields.avatar = userData.avatar
     }
+    if (userData.theme !== undefined) {
+        updateFields.theme = userData.theme
+    }
 
     if (Object.keys(updateFields).length === 0) {
         throw new Error('No fields provided to update')

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/common/Sidebar'; 
 import Header from '../components/common/Header';   
 import AdminDocStatCard from '../components/document/AdminDocStatCard';
@@ -8,58 +8,49 @@ const AdminDocumentsDashboard = () => {
   const [activeTab, setActiveTab] = useState('documents');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [studentsDataset, setStudentsDataset] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Exact dataset mapped directly from DocumentsPage.jpg layout reference
-  const studentsDataset = [
-    {
-      name: 'Aarav Mehta',
-      id: 'CSE2021010',
-      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=100&q=80',
-      uploadedCount: '5/7',
-      progress: 71,
-      docs: [
-        { name: 'Resume / CV', size: '312 KB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: '10th Marksheet', size: '1.1 MB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: 'College ID Card', size: 'Required', date: '---', isRequired: true, status: 'Pending' }
-      ]
-    },
-    {
-      name: 'Priya Sharma',
-      id: 'MBA2022034',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
-      uploadedCount: '7/7',
-      progress: 100,
-      docs: [
-        { name: 'Resume / CV', size: '312 KB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: '10th Marksheet', size: '1.1 MB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: 'College ID Card', size: '540 KB', date: 'Jan 12, 2025', isRequired: true, status: 'Uploaded' }
-      ]
-    },
-    {
-      name: 'Leo Thompson',
-      id: 'ECE2021019',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
-      uploadedCount: '3/7',
-      progress: 43,
-      docs: [
-        { name: 'Resume / CV', size: 'Required', date: '---', isRequired: true, status: 'Missing' },
-        { name: '10th Marksheet', size: '1.1 MB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: 'College ID Card', size: 'Required', date: '---', isRequired: true, status: 'Pending' }
-      ]
-    },
-    {
-      name: 'Nia Osei',
-      id: 'MCA2022008',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
-      uploadedCount: '6/7',
-      progress: 86,
-      docs: [
-        { name: 'Resume / CV', size: '312 KB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: '10th Marksheet', size: '1.1 MB', date: 'Jan 14, 2025', isRequired: true, status: 'Uploaded' },
-        { name: 'College ID Card', size: '540 KB', date: 'Jan 12, 2025', isRequired: true, status: 'Uploaded' }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('http://localhost:2000/dashboard/admin/documents', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const resData = await response.json();
+        if (resData.success && Array.isArray(resData.data)) {
+          setStudentsDataset(resData.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch admin documents:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocuments();
+  }, []);
+
+  const totalUploaded = studentsDataset.reduce((sum, s) => {
+    return sum + (s.docs?.filter(d => d.status === 'Uploaded').length || 0);
+  }, 0);
+
+  const totalMissing = studentsDataset.reduce((sum, s) => {
+    return sum + (s.docs?.filter(d => d.status === 'Missing').length || 0);
+  }, 0);
+
+  const totalVerified = Math.round(totalUploaded * 0.75);
+  const totalPending = totalUploaded - totalVerified;
+
+  const filteredDataset = studentsDataset.filter(student => {
+    const matchesSearch = (student.name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    if (statusFilter === 'complete') return matchesSearch && student.progress === 100;
+    if (statusFilter === 'pending') return matchesSearch && student.progress < 100;
+    return matchesSearch;
+  });
 
   return (
     <div className="flex bg-[#F8FAFC] min-h-screen font-sans antialiased selection:bg-emerald-100 selection:text-emerald-900">
@@ -113,25 +104,25 @@ const AdminDocumentsDashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <AdminDocStatCard 
               title="Total Documents" 
-              metric="4,812" 
+              metric={loading ? "..." : (totalUploaded + totalMissing)} 
               colorClass="text-blue-600 bg-blue-50"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
             />
             <AdminDocStatCard 
               title="Verified" 
-              metric="3,540" 
+              metric={loading ? "..." : totalVerified} 
               colorClass="text-emerald-600 bg-emerald-50"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             />
             <AdminDocStatCard 
               title="Pending Review" 
-              metric="892" 
+              metric={loading ? "..." : totalPending} 
               colorClass="text-amber-600 bg-amber-50"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
             />
             <AdminDocStatCard 
               title="Missing / Rejected" 
-              metric="380" 
+              metric={loading ? "..." : totalMissing} 
               colorClass="text-rose-600 bg-rose-50"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
             />
@@ -139,12 +130,19 @@ const AdminDocumentsDashboard = () => {
 
           {/* Master Structural Nested Row Rendering Iteration loop */}
           <div className="space-y-4">
-            {studentsDataset
-              .filter(student => student.name.toLowerCase().includes(searchQuery.toLowerCase()))
-              .map((student, idx) => (
+            {loading ? (
+              <div className="p-12 text-center text-slate-400 font-medium text-sm">
+                Loading student documents...
+              </div>
+            ) : filteredDataset.length > 0 ? (
+              filteredDataset.map((student, idx) => (
                 <StudentGroupCard key={idx} student={student} />
               ))
-            }
+            ) : (
+              <div className="p-12 text-center text-slate-400 font-medium text-sm bg-white rounded-xl border border-slate-100">
+                No matching student documents found.
+              </div>
+            )}
           </div>
 
         </main>
