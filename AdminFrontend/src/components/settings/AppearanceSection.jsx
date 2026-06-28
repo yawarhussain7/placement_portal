@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiLayout, FiCheck, FiCheckCircle } from 'react-icons/fi';
 import SettingsCardLayout from '../../layout/SettingsCardLayout';
 
@@ -6,6 +6,66 @@ const AppearanceSection = () => {
   const [theme, setTheme] = useState('dark');
   const [accentColor, setAccentColor] = useState('green'); // Defaulting to your premium green preference
   const [sidebarLayout, setSidebarLayout] = useState('expanded');
+
+  // Fetch current theme preference from backend on mount
+  useEffect(() => {
+    const fetchTheme = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+      try {
+        const res = await fetch('http://localhost:2000/profile/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const resData = await res.json();
+        if (resData.success && resData.data?.theme) {
+          setTheme(resData.data.theme);
+        }
+      } catch (err) {
+        console.warn('Failed to load theme preference:', err);
+      }
+    };
+    fetchTheme();
+  }, []);
+
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = newTheme === 'dark' || (newTheme === 'system' && prefersDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  };
+
+  const handleApplyTheme = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.id;
+      if (userId) {
+        const res = await fetch(`http://localhost:2000/profile/profile-update/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ theme })
+        });
+        const resData = await res.json();
+        if (resData.success) {
+          // Instantly apply the theme
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+          document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          alert('Appearance settings successfully applied and persisted!');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update theme:', err);
+      alert('Failed to save appearance settings.');
+    }
+  };
 
   const themes = [
     { 
@@ -54,7 +114,7 @@ const AppearanceSection = () => {
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTheme(t.id)}
+                onClick={() => handleThemeChange(t.id)}
                 className={`group p-2.5 rounded-xl border text-left transition-all focus:outline-none flex flex-col space-y-3 relative ${
                   theme === t.id
                     ? 'border-green-600 bg-green-50/10 ring-1 ring-green-600/30'
@@ -148,7 +208,10 @@ const AppearanceSection = () => {
 
       {/* Control Save Action Buttons */}
       <div className="flex justify-end pt-3 border-t border-gray-100">
-        <button className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shadow-green-600/10 focus:outline-none cursor-pointer">
+        <button 
+          onClick={handleApplyTheme}
+          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shadow-green-600/10 focus:outline-none cursor-pointer"
+        >
           <FiCheckCircle className="w-3.5 h-3.5" />
           Apply Visual System
         </button>

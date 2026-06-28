@@ -1,43 +1,55 @@
 import { PersonalDetails, CourseDetails_Schema, PlacementDoc_Schema, PlacementPreference_Schema } from '../../model/newPlacement/PlacementSchema.modle.js'
 
-export const submitPlacementApplication = async (personalData, courseData, preferenceData, files) => {
+export const submitPlacementApplication = async (userId, personalData, courseData, preferenceData, files) => {
     // Save personal details
-    const personal = await PersonalDetails.create({
-        fullName: personalData.fullName,
-        email: personalData.email,
-        phoneNumber: personalData.phoneNumber,
-        dob: personalData.dob,
-        gender: personalData.gender,
-        address: personalData.address,
-        suburb: personalData.suburb,
-        state: personalData.state,
-        postcode: personalData.postcode,
-        isCitizen: personalData.isCitizen
-    })
+    const personal = await PersonalDetails.findOneAndUpdate(
+        { _id: userId },
+        {
+            fullName: personalData.fullName,
+            email: personalData.email,
+            phoneNumber: personalData.phoneNumber,
+            dob: personalData.dob,
+            gender: personalData.gender,
+            address: personalData.address,
+            suburb: personalData.suburb,
+            state: personalData.state,
+            postcode: personalData.postcode,
+            isCitizen: personalData.isCitizen
+        },
+        { upsert: true, new: true }
+    )
 
     // Save course details
-    const course = await CourseDetails_Schema.create({
-        course: courseData.course,
-        rtoInstitution: courseData.institution,
-        courseCode: courseData.courseCode,
-        studyStatus: courseData.studyStatus,
-        expectedCompletionDate: courseData.completionDate,
-        modeOfStudy: courseData.studyMode,
-        placementType: courseData.placementReason
-    })
+    const course = await CourseDetails_Schema.findOneAndUpdate(
+        { _id: userId },
+        {
+            course: courseData.course,
+            rtoInstitution: courseData.institution,
+            courseCode: courseData.courseCode,
+            studyStatus: courseData.studyStatus,
+            expectedCompletionDate: courseData.completionDate,
+            modeOfStudy: courseData.studyMode,
+            placementType: courseData.placementReason
+        },
+        { upsert: true, new: true }
+    )
 
     // Save placement preferences
-    const preference = await PlacementPreference_Schema.create({
-        industry: preferenceData.industry,
-        role: preferenceData.role || '',
-        location: preferenceData.location,
-        relocate: preferenceData.relocate || 'yes',
-        availability: preferenceData.availability,
-        workingHours: preferenceData.workingHours || '',
-        notes: preferenceData.notes || '',
-        availableDays: Array.isArray(preferenceData.days) ? preferenceData.days : [],
-        placementType: preferenceData.placementType || 'on-site'
-    })
+    const preference = await PlacementPreference_Schema.findOneAndUpdate(
+        { _id: userId },
+        {
+            industry: preferenceData.industry,
+            role: preferenceData.role || '',
+            location: preferenceData.location,
+            relocate: preferenceData.relocate || 'yes',
+            availability: preferenceData.availability,
+            workingHours: preferenceData.workingHours || '',
+            notes: preferenceData.notes || '',
+            availableDays: Array.isArray(preferenceData.days) ? preferenceData.days : [],
+            placementType: preferenceData.placementType || 'on-site'
+        },
+        { upsert: true, new: true }
+    )
 
     // Save document paths if files were uploaded
     let documents = null
@@ -49,7 +61,11 @@ export const submitPlacementApplication = async (personalData, courseData, prefe
                 docPaths[field] = files[field][0].path
             }
         })
-        documents = await PlacementDoc_Schema.create(docPaths)
+        documents = await PlacementDoc_Schema.findOneAndUpdate(
+            { _id: userId },
+            docPaths,
+            { upsert: true, new: true }
+        )
     }
 
     return {

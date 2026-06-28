@@ -9,10 +9,18 @@ const SOCKET_URL = 'http://localhost:2000'
 export function SocketProvider({ children }) {
   const socketRef = useRef(null)
   const [connected, setConnected] = useState(false)
-  const { data } = usePortalData()
+  const { data, receiveMessage, receiveConversation } = usePortalData()
 
   // Extract userId from account data
   const userId = data?.account?.id || null
+
+  const receiveMessageRef = useRef(receiveMessage)
+  const receiveConversationRef = useRef(receiveConversation)
+
+  useEffect(() => {
+    receiveMessageRef.current = receiveMessage
+    receiveConversationRef.current = receiveConversation
+  }, [receiveMessage, receiveConversation])
 
   useEffect(() => {
     if (!userId) return
@@ -36,9 +44,25 @@ export function SocketProvider({ children }) {
       console.warn('[Socket] Connection error:', err.message)
     })
 
+    socket.on('new_message', (payload) => {
+      console.log('[Socket] New message received:', payload)
+      if (receiveMessageRef.current) {
+        receiveMessageRef.current(payload.conversationId, payload.message)
+      }
+    })
+
+    socket.on('new_conversation', (payload) => {
+      console.log('[Socket] New conversation received:', payload)
+      if (receiveConversationRef.current) {
+        receiveConversationRef.current(payload.conversation)
+      }
+    })
+
     socketRef.current = socket
 
     return () => {
+      socket.off('new_message')
+      socket.off('new_conversation')
       socket.disconnect()
       socketRef.current = null
       setConnected(false)

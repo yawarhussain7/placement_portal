@@ -1,33 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/common/Sidebar'
 import Header from '../components/common/Header';   // Uses your minimal header core from earlier
 import DirectoryStatCard from '../components/student/DirectoryStatCard';
 import StudentTableRow from '../components/student/StudentTableRow';
+
 const StudentsData = () => {
   const [activeTab, setActiveTab] = useState('students');
   const [currentFilter, setCurrentFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const filterTabs = ['All', 'Active', 'Placed', 'Offered', 'Inactive'];
 
-  // Exact dataset fully mapped from StudentsPage.jpg
-  const studentsData = [
-    { name: 'Aarav Mehta', enrollmentNo: 'CSE2021010', course: 'B.Tech CSE', cgpa: 8.74, status: 'Placed', placedAt: 'Google', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=100&q=80' },
-    { name: 'Priya Sharma', enrollmentNo: 'MBA2022034', course: 'MBA Finance', cgpa: 8.10, status: 'Active', placedAt: '', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80' },
-    { name: 'Leo Thompson', enrollmentNo: 'ECE2021019', course: 'B.Tech ECE', cgpa: 7.40, status: 'Active', placedAt: '', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80' },
-    { name: 'Nia Osei', enrollmentNo: 'MCA2022008', course: 'MCA', cgpa: 9.01, status: 'Placed', placedAt: 'TCS', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80' },
-    { name: 'Carlos Rivera', enrollmentNo: 'IT2021045', course: 'B.Tech IT', cgpa: 7.92, status: 'Offered', placedAt: 'Microsoft', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80' },
-    { name: 'Aisha Khan', enrollmentNo: 'CSE2022021', course: 'B.Tech CSE', cgpa: 8.50, status: 'Active', placedAt: '', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80' },
-    { name: 'Rahul Das', enrollmentNo: 'CSE2021033', course: 'B.Tech CSE', cgpa: 6.80, status: 'Inactive', placedAt: '', avatar: 'https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&w=100&q=80' }
-  ];
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('http://localhost:2000/dashboard/admin/students', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const resData = await response.json();
+        if (resData.success && Array.isArray(resData.data)) {
+          setStudents(resData.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   // Structural dynamic processing for search syntax filters
-  const filteredStudents = studentsData.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          student.enrollmentNo.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredStudents = students.filter(student => {
+    const matchesSearch = (student.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (student.enrollmentNo || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = currentFilter === 'All' || student.status === currentFilter;
-    const matchesDept = deptFilter === 'all' || student.course.includes(deptFilter);
+    const matchesDept = deptFilter === 'all' || (student.course || '').includes(deptFilter);
     
     return matchesSearch && matchesTab && matchesDept;
   });
@@ -90,10 +105,10 @@ const StudentsData = () => {
 
           {/* Core Analytics Metric Row Blocks matching layout reference data fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <DirectoryStatCard title="Total Students" metric="3,842" trend="+8%" icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} />
-            <DirectoryStatCard title="Placed" metric="872" trend="+21%" icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>} />
-            <DirectoryStatCard title="Awaiting Placement" metric="2,611" trend="+3%" icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-            <DirectoryStatCard title="Inactive / Opted Out" metric="359" trend="-4%" isNegative icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
+            <DirectoryStatCard title="Total Students" metric={loading ? "..." : students.length} trend="+8%" icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} />
+            <DirectoryStatCard title="Placed" metric={loading ? "..." : students.filter(s => s.placedAt).length} trend="+21%" icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" /></svg>} />
+            <DirectoryStatCard title="Awaiting Placement" metric={loading ? "..." : students.filter(s => s.status === 'Active').length} trend="+3%" icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+            <DirectoryStatCard title="Inactive / Opted Out" metric={loading ? "..." : students.filter(s => s.status === 'Inactive').length} trend="-4%" isNegative icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
           </div>
 
           {/* Directory Status Table Matrix Element */}
@@ -148,7 +163,7 @@ const StudentsData = () => {
 
             {/* Interface Footer Pagination Segment bar configuration matches design matrix */}
             <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-50 text-xs font-semibold text-gray-400">
-              <span>Showing 1-{filteredStudents.length} of 3,842 students</span>
+              <span>Showing {filteredStudents.length} of {students.length} students</span>
               
               <div className="flex items-center gap-1">
                 <button className="p-1.5 border border-gray-150 rounded-md hover:bg-gray-50 transition-colors text-gray-400 disabled:opacity-50">

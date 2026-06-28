@@ -1,1 +1,110 @@
 @import "tailwindcss";
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Surfaces / Cards / Panels / Header / Sidebar (normally bg-white) */
+  --color-white: #1e293b;
+
+  /* Page base backgrounds (normally bg-gray-50, bg-slate-50, bg-[#F8FAFC]) */
+  --color-gray-50: #0f172a;
+  --color-slate-50: #0f172a;
+  --color-slate-100: #1e293b;
+  --color-gray-100: #1e293b;
+
+  /* Primary text colors (normally text-slate-900, text-gray-900, text-gray-800) */
+  --color-slate-900: #f8fafc;
+  --color-gray-900: #f8fafc;
+  --color-gray-800: #f1f5f9;
+
+  /* Secondary text colors (normally text-slate-500, text-slate-400, text-gray-500, text-gray-400) */
+  --color-slate-500: #94a3b8;
+  --color-slate-400: #cbd5e1;
+  --color-gray-500: #94a3b8;
+  --color-gray-400: #cbd5e1;
+
+  /* Borders (normally border-slate-200, border-gray-200, border-gray-100, border-slate-100) */
+  --color-slate-200: #334155;
+  --color-gray-200: #334155;
+  --color-gray-100: #1e293b;
+  --color-slate-100: #1e293b;
+
+  /* Active Menu / Selection Highlights (normally bg-emerald-50, text-emerald-700) */
+  --color-emerald-50: rgba(16, 185, 129, 0.12);
+  --color-emerald-100: rgba(16, 185, 129, 0.2);
+  --color-emerald-700: #34d399;
+
+  /* Hover states */
+  --color-slate-50: #1e293b;
+  --color-gray-50: #1e293b;
+
+  /* Green button backgrounds */
+  --color-green-600: #22c55e;
+  --color-green-700: #4ade80;
+  --color-green-50: #052e16;
+  --color-green-100: #064e3b;
+}
+
+/* Redefines for hardcoded hex colors in dark mode */
+[data-theme="dark"] .bg-\[\#F8FAFC\] {
+  background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .bg-\[\#EFF3F0\] {
+  background-color: #1e293b !important;
+}
+
+[data-theme="dark"] .bg-\[\#EFF3F0\]\/40 {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+}
+
+[data-theme="dark"] select,
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] select:focus,
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: #10b981 !important;
+  background-color: #0f172a !important;
+}
+
+[data-theme="dark"] .text-gray-600 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .text-gray-700 {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .text-gray-800 {
+  color: #f1f5f9 !important;
+}
+
+/* Smooth theme transitions */
+body, header, aside, main, div, button, input, select, textarea, table, th, td {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Hide scrollbars globally */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}

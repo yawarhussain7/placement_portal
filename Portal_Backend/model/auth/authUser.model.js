@@ -34,6 +34,11 @@ const AuthUserSchema = new mongoose.Schema(
     phone: {
       type: String,
       default: ""
+    },
+    theme: {
+      type: String,
+      enum: ["light", "dark", "system"],
+      default: "light"
     }
   },
   {
