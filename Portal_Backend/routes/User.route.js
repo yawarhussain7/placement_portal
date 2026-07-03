@@ -7,4 +7,6 @@ AuthRoute.post('/register', registerController)
 AuthRoute.post('/login', LoginController)
 AuthRoute.post('/logout', LogoutController)
 
+
+
 export default AuthRoute;

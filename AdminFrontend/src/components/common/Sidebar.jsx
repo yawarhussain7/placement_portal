@@ -20,7 +20,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
 
   const handleLogout = () => {
     // Add your auth logic here (e.g., clear localStorage, etc.)
-    navigate('/login');
+    navigate('/signIn');
   };
 
   return (

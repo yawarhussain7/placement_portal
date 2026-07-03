@@ -14,7 +14,7 @@ const SwitchControl = ({ title, description, checked, onChange, variant = 'slide
           className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all border ${
             !checked 
               ? 'bg-rose-50 border-rose-100 text-rose-700' 
-              : 'bg-emerald-50 border-emerald-100 text-[#22C55E]'
+              : 'bg-emerald-50 border-emerald-100 text-emerald-600'
           }`}
         >
           {!checked ? (
@@ -45,7 +45,7 @@ const SwitchControl = ({ title, description, checked, onChange, variant = 'slide
           type="button"
           onClick={() => onChange(!checked)}
           className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
-            checked ? 'bg-[#22C55E]' : 'bg-gray-200'
+            checked ? 'bg-emerald-600' : 'bg-gray-200'
           }`}
         >
           <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform duration-200 ease-in-out ${

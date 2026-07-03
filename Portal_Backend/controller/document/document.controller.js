@@ -13,7 +13,7 @@ export const getDocuments = async (req, res) => {
         const documents = await listDocuments(userId)
         return res.status(200).json({ success: true, data: documents })
     } catch (error) {
-        console.error('GET DOCUMENTS ERROR:', error)
+        console.error('Get documents error:', error.message)
         return res.status(500).json({ message: error.message || 'Failed to fetch documents', success: false })
     }
 }
@@ -37,7 +37,7 @@ export const uploadNewDocument = async (req, res) => {
         const doc = await uploadDocument(userId, req.file, title, description)
         return res.status(201).json({ success: true, data: doc, message: 'Document uploaded successfully' })
     } catch (error) {
-        console.error('UPLOAD DOCUMENT ERROR:', error)
+        console.error('Upload document error:', error.message)
         return res.status(500).json({ message: error.message || 'Failed to upload document', success: false })
     }
 }
@@ -60,7 +60,7 @@ export const replaceExistingDocument = async (req, res) => {
         const doc = await replaceDocument(req.params.id, userId, req.file)
         return res.status(200).json({ success: true, data: doc, message: 'Document replaced successfully' })
     } catch (error) {
-        console.error('REPLACE DOCUMENT ERROR:', error)
+        console.error('Replace document error:', error.message)
         if (error.message === 'Document not found') {
             return res.status(404).json({ message: error.message, success: false })
         }
@@ -82,7 +82,7 @@ export const removeDocument = async (req, res) => {
         const result = await deleteDocument(req.params.id, userId)
         return res.status(200).json({ success: true, ...result })
     } catch (error) {
-        console.error('DELETE DOCUMENT ERROR:', error)
+        console.error('Delete document error:', error.message)
         if (error.message === 'Document not found') {
             return res.status(404).json({ message: error.message, success: false })
         }
@@ -110,7 +110,7 @@ export const downloadExistingDocument = async (req, res) => {
         // Stream the file
         return res.sendFile(filePath)
     } catch (error) {
-        console.error('DOWNLOAD DOCUMENT ERROR:', error)
+        console.error('Download document error:', error.message)
         if (error.message === 'Document not found' || error.message === 'File not found on disk' || error.message === 'File path not found') {
             return res.status(404).json({ message: error.message, success: false })
         }

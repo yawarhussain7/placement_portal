@@ -17,7 +17,7 @@ const VerificationTabHeader = ({ activeTab, setActiveTab, verificationStatus }) 
           onClick={() => setActiveTab(tab.id)}
           className={`pb-3.5 px-3 text-xs font-bold transition-all relative -bottom-[1px] flex items-center gap-2 border-b-2 ${
             activeTab === tab.id
-              ? 'border-[#22C55E] text-[#22C55E]'
+              ? 'border-emerald-600 text-emerald-600'
               : 'border-transparent text-gray-400 hover:text-gray-600'
           }`}
         >

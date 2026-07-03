@@ -19,9 +19,9 @@ const StudentGroupCard = ({ student }) => {
         <div className="flex items-center gap-6 flex-1 justify-end max-w-md w-full">
           <div className="flex items-center gap-3 flex-1">
             <span className="text-xs font-medium text-gray-400 whitespace-nowrap">{student.uploadedCount} docs uploaded</span>
-            <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-[#22C55E] h-full rounded-full transition-all duration-500" style={{ width: `${student.progress}%` }} />
-            </div>
+              <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="bg-emerald-600 h-full rounded-full transition-all duration-500" style={{ width: `${student.progress}%` }} />
+              </div>
             <span className="text-xs font-bold text-gray-700 w-8 text-right">{student.progress}%</span>
           </div>
           

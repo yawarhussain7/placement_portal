@@ -1,4 +1,4 @@
-import { getDashboardData, createActivity, createTask, toggleTask, createThread, sendMessage, createTicket } from '../../service/dashboard/dashboard.service.js'
+import { getDashboardData, createActivity, createTask, toggleTask, createThread, sendMessage, createTicket, getAdminStatsService, getAdminStudentsService, getAdminDocumentsService } from '../../service/dashboard/dashboard.service.js'
 
 
 export const getDashboard = async (req, res) => {
@@ -97,5 +97,41 @@ export const addTicket = async (req, res) => {
         res.status(201).json({ success: true, data: ticket })
     } catch (error) {
         res.status(500).json({ message: error.message, success: false })
+    }
+}
+
+export const getAdminStats = async (req, res) => {
+    try {
+        const userId = req.user?._id || req.user?.id || null
+        if (!userId) return res.status(401).json({ message: 'Authentication required', success: false })
+
+        const data = await getAdminStatsService()
+        res.status(200).json({ success: true, data })
+    } catch (error) {
+        res.status(500).json({ message: error.message || 'Failed to fetch admin stats', success: false })
+    }
+}
+
+export const getAdminStudents = async (req, res) => {
+    try {
+        const userId = req.user?._id || req.user?.id || null
+        if (!userId) return res.status(401).json({ message: 'Authentication required', success: false })
+
+        const data = await getAdminStudentsService()
+        res.status(200).json({ success: true, data })
+    } catch (error) {
+        res.status(500).json({ message: error.message || 'Failed to fetch admin students', success: false })
+    }
+}
+
+export const getAdminDocuments = async (req, res) => {
+    try {
+        const userId = req.user?._id || req.user?.id || null
+        if (!userId) return res.status(401).json({ message: 'Authentication required', success: false })
+
+        const data = await getAdminDocumentsService()
+        res.status(200).json({ success: true, data })
+    } catch (error) {
+        res.status(500).json({ message: error.message || 'Failed to fetch admin documents', success: false })
     }
 }

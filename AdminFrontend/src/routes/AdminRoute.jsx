@@ -1,5 +1,5 @@
 import React from 'react'
-import {Routes,Route} from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import AdminDashboard from '../pages/AdminDashboard'
 import StudentsData from '../pages/StudentsData'
 import AdminDocumentsDashboard from '../pages/AdminDocumentsDashboard'
@@ -10,6 +10,12 @@ import PlacementData from '../pages/PlacementData'
 import Report from '../pages/Report'
 
 const AdminRoute = () => {
+  const token = localStorage.getItem('auth_token')
+
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
+
   return (
     <Routes>
         <Route path='/dashboard' element={<AdminDashboard/>}/>

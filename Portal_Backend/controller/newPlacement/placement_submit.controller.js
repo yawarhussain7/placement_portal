@@ -64,7 +64,15 @@ export const submitController = async (req, res) => {
             })
         }
 
-        const result = await submitPlacementApplication(personalData, courseData, preferenceData, req.files)
+        const userId = req.user?.id || req.user?._id
+        if (!userId) {
+            return res.status(401).send({
+                message: 'Authentication required to submit placement application',
+                success: false
+            })
+        }
+
+        const result = await submitPlacementApplication(userId, personalData, courseData, preferenceData, req.files)
 
         res.status(201).send({
             message: 'Placement application submitted successfully',
@@ -73,7 +81,7 @@ export const submitController = async (req, res) => {
         })
 
     } catch (error) {
-        console.error('PLACEMENT SUBMIT ERROR:', error)
+        console.error('Placement submit error:', error.message)
 
         // Handle Mongoose validation errors
         if (error.name === 'ValidationError') {

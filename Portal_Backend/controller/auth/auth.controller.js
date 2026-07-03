@@ -30,7 +30,7 @@ export const registerController = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("REGISTER CONTROLLER ERROR:", error);
+        console.error("Register controller error:", error.message);
 
         return res.status(500).json({
             success: false,
@@ -58,6 +58,7 @@ export const LoginController = async (req, res) => {
             data: result
         })
     } catch (error) {
+        console.error("Login controller error:", error.message);
         return res.status(400).json({
             message: 'Invalid email or password',
             success: false
@@ -78,3 +79,4 @@ export const LogoutController = async (req, res) => {
         success: true
     })
 }
+

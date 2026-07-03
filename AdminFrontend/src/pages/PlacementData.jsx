@@ -319,7 +319,7 @@ const PlacementData = () => {
                   >
                     <FiDownload /> Export CSV Sheet
                   </button>
-                  <button className="px-3.5 py-2 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                  <button className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2 shadow-sm">
                     <FiCheck /> Final Approval
                   </button>
                 </div>
@@ -445,7 +445,7 @@ const PlacementData = () => {
                 <div className="space-y-4">
                   <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4 text-xs">
                     <h3 className="font-bold text-gray-900 tracking-tight flex items-center gap-1.5">
-                      <FiFlag className="text-[#22C55E]" /> Automated Eligibility Checks
+                      <FiFlag className="text-emerald-600" /> Automated Eligibility Checks
                     </h3>
                     <div className="space-y-2.5 font-medium text-gray-600">
                       <div className="flex items-center justify-between p-2 bg-emerald-50/40 border border-emerald-100 rounded-lg">

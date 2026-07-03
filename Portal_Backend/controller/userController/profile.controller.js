@@ -1,4 +1,4 @@
-import { showProfile, Update_Profile } from '../../service/user/updateProfile.service.js'
+import { showProfile, Update_Profile, } from '../../service/user/updateProfile.service.js'
 
 // GET /profile — Fetch user profile
 export const getProfile = async (req, res) => {
@@ -14,7 +14,7 @@ export const getProfile = async (req, res) => {
             data
         })
     } catch (error) {
-        console.error(error)
+        console.error('Get profile error:', error.message)
         return res.status(500).json({
             message: error.message || 'Server error',
             success: false
@@ -38,10 +38,11 @@ export const updateProfile = async (req, res) => {
             data
         })
     } catch (error) {
-        console.error(error)
+        console.error('Update profile error:', error.message)
         return res.status(500).json({
             message: error.message || 'Server error',
             success: false
         })
     }
 }
+

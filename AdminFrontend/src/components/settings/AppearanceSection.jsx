@@ -1,11 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiLayout, FiCheck, FiCheckCircle } from 'react-icons/fi';
 import SettingsCardLayout from '../../layout/SettingsCardLayout';
+import api from '../../api/api.js';
 
 const AppearanceSection = () => {
   const [theme, setTheme] = useState('dark');
   const [accentColor, setAccentColor] = useState('green'); // Defaulting to your premium green preference
   const [sidebarLayout, setSidebarLayout] = useState('expanded');
+
+  // Fetch current theme preference from backend on mount
+  useEffect(() => {
+    const fetchTheme = async () => {
+      try {
+        const res = await api.get('/profile/profile');
+        const resData = res.data;
+        if (resData.success && resData.data?.theme) {
+          setTheme(resData.data.theme);
+        }
+      } catch (err) {
+        console.warn('Failed to load theme preference:', err.message);
+      }
+    };
+    fetchTheme();
+  }, []);
+
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = newTheme === 'dark' || (newTheme === 'system' && prefersDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  };
+
+  const handleApplyTheme = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.id;
+      if (userId) {
+        const res = await api.put(`/profile/profile-update/${userId}`, { theme });
+        const resData = res.data;
+        if (resData.success) {
+          // Instantly apply the theme
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
+          document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          alert('Appearance settings successfully applied and persisted!');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update theme:', err.message);
+      alert('Failed to save appearance settings.');
+    }
+  };
 
   const themes = [
     { 
@@ -54,10 +102,10 @@ const AppearanceSection = () => {
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTheme(t.id)}
+                onClick={() => handleThemeChange(t.id)}
                 className={`group p-2.5 rounded-xl border text-left transition-all focus:outline-none flex flex-col space-y-3 relative ${
                   theme === t.id
-                    ? 'border-green-600 bg-green-50/10 ring-1 ring-green-600/30'
+                    ? 'border-emerald-600 bg-emerald-50/10 ring-1 ring-emerald-600/30'
                     : 'border-gray-200 bg-white hover:bg-gray-50/80 hover:border-gray-300'
                 }`}
               >
@@ -70,7 +118,7 @@ const AppearanceSection = () => {
                   </div>
                   
                   {theme === t.id && (
-                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-green-600 flex items-center justify-center shadow-xs">
+                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-600 flex items-center justify-center shadow-xs">
                       <FiCheck className="w-2.5 h-2.5 text-white stroke-[3]" />
                     </div>
                   )}
@@ -134,7 +182,7 @@ const AppearanceSection = () => {
               type="button"
               onClick={() => setSidebarLayout(sidebarLayout === 'expanded' ? 'compact' : 'expanded')}
               className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none ${
-                sidebarLayout === 'compact' ? 'bg-green-600' : 'bg-gray-200'
+                sidebarLayout === 'compact' ? 'bg-emerald-600' : 'bg-gray-200'
               }`}
             >
               <div className={`w-4 h-4 rounded-full bg-white shadow-sm transform duration-200 ease-in-out ${
@@ -148,7 +196,10 @@ const AppearanceSection = () => {
 
       {/* Control Save Action Buttons */}
       <div className="flex justify-end pt-3 border-t border-gray-100">
-        <button className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shadow-green-600/10 focus:outline-none cursor-pointer">
+        <button 
+          onClick={handleApplyTheme}
+          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm shadow-emerald-600/10 focus:outline-none cursor-pointer"
+        >
           <FiCheckCircle className="w-3.5 h-3.5" />
           Apply Visual System
         </button>

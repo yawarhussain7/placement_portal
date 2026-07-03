@@ -55,7 +55,7 @@ export const createOrGetConversation = async (req, res) => {
 
         res.status(201).json({ success: true, data: conversation.toObject(), existing: false })
     } catch (error) {
-        console.error('CREATE CONVERSATION ERROR:', error)
+        console.error('Create conversation error:', error.message)
         res.status(500).json({ message: error.message || 'Failed to create conversation', success: false })
     }
 }
@@ -100,7 +100,7 @@ export const getConversations = async (req, res) => {
 
         res.status(200).json({ success: true, data: formatted })
     } catch (error) {
-        console.error('GET CONVERSATIONS ERROR:', error)
+        console.error('Get conversations error:', error.message)
         res.status(500).json({ message: error.message || 'Failed to load conversations', success: false })
     }
 }
@@ -173,7 +173,7 @@ export const sendMessage = async (req, res) => {
             }
         })
     } catch (error) {
-        console.error('SEND MESSAGE ERROR:', error)
+        console.error('Send message error:', error.message)
         res.status(500).json({ message: error.message || 'Failed to send message', success: false })
     }
 }

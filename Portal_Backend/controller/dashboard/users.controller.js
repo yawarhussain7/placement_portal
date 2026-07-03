@@ -1,6 +1,6 @@
 import User from '../../model/auth/authUser.model.js'
-
-export const getUsers = async (req, res) => {
+import {GetAllUser}from '../../service/user/updateProfile.service.js'
+export const getUser = async (req, res) => {
     try {
         const currentUserId = req.user?.id || req.user?._id || null
 
@@ -24,7 +24,19 @@ export const getUsers = async (req, res) => {
 
         res.status(200).json({ success: true, data: formatted })
     } catch (error) {
-        console.error('GET USERS ERROR:', error)
+        console.error('Get users error:', error.message)
         res.status(500).json({ message: error.message || 'Failed to fetch users', success: false })
     }
 }
+export const getAllUsersController = async (req, res) => {
+    try {
+        const users = await GetAllUser();
+        res.status(200).json({
+            message:'users fetch successfull...',
+            success:true,
+            users:users
+        })
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -29,6 +29,9 @@ export const Update_Profile = async (userId, userData) => {
     if (userData.avatar !== undefined) {
         updateFields.avatar = userData.avatar
     }
+    if (userData.theme !== undefined) {
+        updateFields.theme = userData.theme
+    }
 
     if (Object.keys(updateFields).length === 0) {
         throw new Error('No fields provided to update')
@@ -46,3 +49,12 @@ export const Update_Profile = async (userId, userData) => {
 
     return updatedUser;
 }
+
+export const GetAllUser = async () => {
+    try {
+        const users = await User.find().select('username email avatar bio phone createdAt').lean();
+        return users;
+    } catch (error) {
+        throw new Error('Error fetching users: ' + error.message);
+    }
+};

@@ -95,7 +95,7 @@ const Applications = () => {
                   Filters
                 </button>
 
-                <button className="px-3 py-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10">
+                  <button className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
@@ -121,13 +121,13 @@ const Applications = () => {
                   onClick={() => setCurrentFilter(tab.label)}
                   className={`pb-2.5 px-2 text-xs font-bold transition-all relative -bottom-[1px] flex items-center gap-1.5 border-b-2 ${
                     currentFilter === tab.label
-                      ? 'border-[#22C55E] text-[#22C55E]'
+                      ? 'border-emerald-600 text-emerald-600'
                       : 'border-transparent text-gray-400 hover:text-gray-600'
                   }`}
                 >
                   {tab.label}
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                    currentFilter === tab.label ? 'bg-emerald-50 text-[#22C55E]' : 'bg-gray-50 text-gray-400'
+                    currentFilter === tab.label ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'
                   }`}>
                     {tab.count}
                   </span>
@@ -156,7 +156,7 @@ const Applications = () => {
                 <button className="p-1.5 border border-gray-150 rounded-md hover:bg-gray-50 transition-colors text-gray-400">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
                 </button>
-                <button className="w-7 h-7 bg-[#22C55E] text-white rounded-md text-xs font-bold shadow-sm shadow-emerald-500/10">1</button>
+                <button className="w-7 h-7 bg-emerald-600 text-white rounded-md text-xs font-bold shadow-sm shadow-emerald-500/10">1</button>
                 <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">2</button>
                 <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">3</button>
                 <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">4</button>
