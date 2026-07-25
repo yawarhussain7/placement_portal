@@ -2,28 +2,27 @@ import React from 'react';
 
 export const RadioGroup = ({ label, required, name, options, value, onChange }) => (
   <div className="w-full">
-    <label className="block text-gray-900 font-semibold mb-2">
-      {label} {required && <span className="text-red-500">*</span>}
+    <label className="block text-primary font-semibold text-sm mb-2">
+      {label} {required && <span className="text-danger">*</span>}
     </label>
-    <div className="flex items-center gap-6 h-[46px]">
+    <div className="flex items-center gap-4">
       {options.map((opt) => {
         const isChecked = value === opt.value;
         return (
-          <label key={opt.value} className="flex items-center gap-2 cursor-pointer font-medium text-gray-800">
+          <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group">
             <input
               type="radio"
               name={name}
               value={opt.value}
               checked={isChecked}
               onChange={() => onChange(opt.value)}
-              className="sr-only"
+              className="w-4 h-4 text-accent border-base focus:ring-accent focus:ring-2"
             />
-            <span className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-              isChecked ? 'border-green-600' : 'border-gray-300'
+            <span className={`text-sm font-medium transition-colors ${
+              isChecked ? 'text-accent' : 'text-secondary group-hover:text-primary'
             }`}>
-              {isChecked && <span className="w-2.5 h-2.5 bg-green-600 rounded-full" />}
+              {opt.label}
             </span>
-            {opt.label}
           </label>
         );
       })}

@@ -6,7 +6,7 @@ import NotificationsSection from '../components/settings/NotificationsSection'
 import SecuritySection from '../components/settings/SecuritySection'
 import AppearanceSection from '../components/settings/AppearanceSection'
 
-const SettingRouter = () => {
+const SettingRoute = () => {
   return (
     <Routes>
       <Route path='/' element={<Settings/>}>
@@ -20,4 +20,4 @@ const SettingRouter = () => {
   )
 }
 
-export default SettingRouter
+export default SettingRoute

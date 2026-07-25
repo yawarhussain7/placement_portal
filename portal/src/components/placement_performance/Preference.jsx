@@ -75,7 +75,7 @@ const Placement_Performance = ({ onBack, onNext }) => {
   };
 
   return (
-    <div className=" p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-sm">
+    <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 text-sm">
       <form onSubmit={handleForm} className="space-y-6">
 
         {/* Row 1 */}
@@ -197,25 +197,25 @@ const Placement_Performance = ({ onBack, onNext }) => {
               Days Available <span className="text-red-500">*</span>
             </label>
 
-            <div className="flex flex-wrap gap-2">
-              {daysOfWeek.map((day) => {
-                const isSelected = selectedDays.includes(day);
-                return (
-                  <button
-                    type="button"
-                    key={day}
-                    onClick={() => toggleDay(day)}
-                    className={`px-3 py-2 rounded-lg font-medium border transition-all ${
-                      isSelected
-                        ? 'bg-green-50 border-green-200 text-green-700'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
-            </div>
+        <div className="flex flex-wrap gap-2">
+          {daysOfWeek.map((day) => {
+            const isSelected = selectedDays.includes(day);
+            return (
+              <button
+                type="button"
+                key={day}
+                onClick={() => toggleDay(day)}
+                className={`px-4 py-2 rounded-lg font-medium border-2 transition-all shadow-sm hover:shadow-md ${
+                  isSelected
+                    ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-md'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-400 hover:text-emerald-600'
+                }`}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
 
             {touched && errors.days && (
               <p className="text-red-500 text-xs mt-2">{errors.days}</p>
@@ -230,7 +230,7 @@ const Placement_Performance = ({ onBack, onNext }) => {
               Preferred Placement Type <span className="text-red-500">*</span>
             </label>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {['on-site', 'hybrid', 'remote'].map((type) => {
                 const isActive = placement === type;
 
@@ -239,14 +239,14 @@ const Placement_Performance = ({ onBack, onNext }) => {
                     type="button"
                     key={type}
                     onClick={() => setPlacement(type)}
-                    className={`py-2.5 px-3 rounded-lg font-medium border text-center capitalize transition-all flex items-center justify-center gap-1.5 ${
+                    className={`py-3 px-4 rounded-xl font-medium border-2 text-center capitalize transition-all flex flex-col items-center justify-center gap-2 ${
                       isActive
-                        ? 'bg-green-50 border-green-600 text-green-700 font-semibold'
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                        ? 'bg-emerald-50 border-emerald-600 text-emerald-700 font-semibold shadow-md'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-400 hover:shadow-md'
                     }`}
                   >
-                    {isActive && <Check className="w-4 h-4 text-green-700" />}
-                    <span>{type === 'on-site' ? 'On-site' : type}</span>
+                    {isActive && <Check className="w-5 h-5 text-emerald-600" />}
+                    <span className="text-sm">{type === 'on-site' ? 'On-site' : type}</span>
                   </button>
                 );
               })}
@@ -286,7 +286,7 @@ const Placement_Performance = ({ onBack, onNext }) => {
             <button
               type="button"
               onClick={onBack}
-              className="flex items-center gap-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors"
+              className="flex items-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors"
             >
               <ArrowLeft size={14} />
               <span>Back</span>
@@ -295,7 +295,7 @@ const Placement_Performance = ({ onBack, onNext }) => {
 
           <button
             type="submit"
-            className="flex items-center gap-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-md hover:shadow-lg"
           >
             <span>Save & Continue</span>
             <ArrowRight size={14} />

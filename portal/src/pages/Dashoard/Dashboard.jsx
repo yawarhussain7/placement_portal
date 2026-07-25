@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import DashboardLayout from '../../layout/DashboardLayout'
 import StatCard from "../../components/Dashboard/StatCard"
 import ApplicationProgressCard from "../../components/Dashboard/ApplicationProgressCard"
+import TaskCard from "../../components/Dashboard/TaskCard"
+import ActivityCard from "../../components/Dashboard/ActivityCard"
+import TicketCard from "../../components/Dashboard/TicketCard"
 
 import {
   BriefcaseBusiness,
@@ -28,10 +31,10 @@ const Dashboard = () => {
 
       {/* HEADER SECTION */}
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl font-bold text-primary">
           Welcome, {data.account.fullName}
         </h1>
-        <p className="text-xs sm:text-sm text-gray-500">
+        <p className="text-xs sm:text-sm text-secondary">
           Your placement dashboard overview
         </p>
       </div>
@@ -69,9 +72,9 @@ const Dashboard = () => {
       </div>
 
       {/* APPLICATIONS */}
-      <div className="bg-white border rounded-xl p-4 sm:p-5 mb-6">
+      <div className="bg-surface rounded-2xl p-4 sm:p-5 mb-6 shadow-pro-lg">
 
-        <h2 className="text-sm sm:text-base font-semibold text-gray-800 mb-3 sm:mb-4">
+        <h2 className="text-sm sm:text-base font-semibold text-primary mb-3 sm:mb-4">
           Applications
         </h2>
 
@@ -81,6 +84,17 @@ const Dashboard = () => {
           ))}
         </div>
 
+      </div>
+
+      {/* TASKS & ACTIVITY */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <TaskCard tasks={data.tasks} />
+        <ActivityCard activities={data.activity} />
+      </div>
+
+      {/* SUPPORT TICKETS */}
+      <div className="mb-6">
+        <TicketCard tickets={data.tickets} />
       </div>
 
     </DashboardLayout>

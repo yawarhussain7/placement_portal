@@ -1,25 +1,55 @@
 import React from 'react';
-import { FiHome } from 'react-icons/fi';
-const UpcomingDrives = () => {
-  const drives = [
-    { company: 'Wipro', details: '3 roles · 142 students', date: 'Jan 18' },
-    { company: 'Amazon', details: '2 roles · 89 students', date: 'Jan 22' },
-  ];
+import { FiClock, FiChevronRight } from 'react-icons/fi';
+
+const UpcomingDrives = ({ upcomingDrives }) => {
+  if (!upcomingDrives || upcomingDrives.length === 0) return null;
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm w-full lg:w-96">
-      <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider mb-6">Upcoming Drives</h3>
-      <div className="space-y-4">
-        {drives.map((drive, idx) => (
-          <div key={idx} className="flex items-center justify-between p-4 border border-slate-100 rounded-lg bg-slate-50/50">
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">{drive.company}</h4>
-              <p className="text-[11px] font-semibold text-slate-400">{drive.details}</p>
+    <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-base font-bold text-gray-900">Upcoming Drives</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Recent applications</p>
+        </div>
+        <button className="text-emerald-600 hover:text-emerald-700 transition-colors">
+          <FiClock className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="space-y-2.5">
+        {upcomingDrives.map((drive, index) => (
+          <div
+            key={index}
+            className="group flex items-center gap-3 bg-gray-50 rounded-lg p-2.5 hover:bg-emerald-50 hover:border-emerald-200 border border-transparent transition-all duration-200 cursor-pointer"
+          >
+            <div className={`w-11 h-11 bg-${drive.color}-100 rounded-lg flex flex-col items-center justify-center shadow-sm group-hover:scale-105 transition-transform flex-shrink-0`}>
+              <span className="text-xs font-bold text-gray-900">{drive.date.split(' ')[0]}</span>
+              <span className="text-[8px] font-semibold text-gray-600">{drive.date.split(' ')[1]}</span>
             </div>
-            <span className="text-[10px] font-black text-green-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">{drive.date}</span>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-700 transition-colors truncate">
+                {drive.company}
+              </h4>
+              <p className="text-[10px] text-gray-500 mt-0.5">{drive.roles} • {drive.students}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[10px] font-semibold text-gray-700">{drive.time}</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold ${
+                  drive.status === 'Active' ? 'bg-green-100 text-green-700' :
+                  drive.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                  {drive.status}
+                </span>
+              </div>
+            </div>
+            <FiChevronRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-600 transition-colors flex-shrink-0" />
           </div>
         ))}
       </div>
+
+      <button className="w-full mt-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg text-xs font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-sm hover:shadow-md">
+        View All Drives
+      </button>
     </div>
   );
 };

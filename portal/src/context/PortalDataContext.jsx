@@ -1,12 +1,17 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
-import { getDashboardData, toggleTask as toggleTaskApi, createTicket as createTicketApi } from '../Api/dashboardApi.js'
-import { getDocuments as getDocumentsApi, uploadDocument as uploadDocumentApi, replaceDocument as replaceDocumentApi, deleteDocument as deleteDocumentApi } from '../Api/documentApi.js'
-import { getConversations as getConversationsApi, createOrGetConversation as createConversationApi, sendMessage as sendConversationMessageApi } from '../Api/conversationApi.js'
+import { createContext, useContext, useMemo, useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { getProfile } from '../Api/profileApi.js'
+import { getMyApplications, getApplicationStats } from '../Api/application.js'
+import { 
+  getMyDocuments, 
+  uploadDocument as uploadDocumentApi, 
+  deleteDocument as deleteDocumentApi,
+  verifyDocument as verifyDocumentApi,
+  updateDocument 
+} from '../Api/document.js'
 
 const PortalDataContext = createContext(null)
-
-const today = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' })
 
 const defaultData = {
   account: {
@@ -14,6 +19,7 @@ const defaultData = {
     email: 'alex.morgan@example.com',
     phone: '+61 412 345 678',
     region: 'Australia Placement Team',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
   },
   preferences: {
     applicationUpdates: true,
@@ -104,92 +110,277 @@ const defaultData = {
 
 export function PortalDataProvider({ children }) {
   const [data, setData] = useState(defaultData)
-  const [loading, setLoading] = useState(true)
-  const [apiAvailable, setApiAvailable] = useState(false)
+  const [profileLoaded, setProfileLoaded] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Read auth token from localStorage to detect login/logout changes
-  const [authToken, setAuthToken] = useState(() => localStorage.getItem('auth_token'))
-
-  // Listen for auth token changes (login/logout in other tabs/windows too)
+  // Fetch profile data from backend (uses cookie-based auth)
   useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === 'auth_token') {
-        setAuthToken(e.newValue)
+    const fetchUserProfile = async () => {
+      try {
+        const response = await getProfile()
+        if (response?.data?.success && response?.data?.data) {
+          const userData = response.data.data
+          
+          // Update account data with real user profile
+          setData((current) => ({
+            ...current,
+            account: {
+              ...current.account,
+              fullName: userData.fullName || current.account.fullName,
+              email: userData.email || current.account.email,
+              avatar: userData.avatar || current.account.avatar,
+              bio: userData.bio || current.account.bio,
+              username: userData.username,
+              phone: userData.phone,
+              website: userData.website,
+            },
+          }))
+          setProfileLoaded(true)
+          setIsAuthenticated(true)
+        } else {
+          // No profile data returned - user is not logged in
+          console.log('No profile data received from backend - user not authenticated')
+          setProfileLoaded(false)
+          setIsAuthenticated(false)
+          // Reset to default data when not authenticated
+          setData(defaultData)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error)
+        // User is not authenticated or profile fetch failed
+        setProfileLoaded(false)
+        setIsAuthenticated(false)
+        // Reset to default data when not authenticated
+        setData(defaultData)
       }
     }
 
-    // Custom event fired directly by SignInForm/SignUpForm for immediate refresh
-    const handleCustomEvent = () => {
-      const current = localStorage.getItem('auth_token')
-      setAuthToken(current)
+    // Always try to fetch profile - backend will return 401 if not authenticated
+    // The cookie is automatically sent with requests
+    fetchUserProfile()
+
+    // Listen for auth token changes
+    const handleAuthChange = () => {
+      fetchUserProfile()
     }
 
-    // Poll for auth token changes (backup for non-reactive scenarios)
-    const interval = setInterval(() => {
-      const current = localStorage.getItem('auth_token')
-      setAuthToken((prev) => (prev !== current ? current : prev))
-    }, 1000)
-
-    window.addEventListener('storage', handleStorage)
-    window.addEventListener('auth-token-changed', handleCustomEvent)
+    window.addEventListener('auth-token-changed', handleAuthChange)
+    
     return () => {
-      window.removeEventListener('storage', handleStorage)
-      window.removeEventListener('auth-token-changed', handleCustomEvent)
-      clearInterval(interval)
+      window.removeEventListener('auth-token-changed', handleAuthChange)
     }
   }, [])
 
-  // Fetch all data from backend whenever auth token changes
-  // This ensures fresh data loads when logging in as a different user
+  // Helper functions to format backend data for frontend
+  const formatStatus = (backendStatus) => {
+    const statusMap = {
+      'draft': 'Draft',
+      'submitted': 'Submitted',
+      'under_review': 'Documents Under Review',
+      'shortlisted': 'Shortlisted',
+      'interview_scheduled': 'Interview Scheduled',
+      'accepted': 'Offer Received',
+      'rejected': 'Not Selected',
+      'withdrawn': 'Withdrawn'
+    }
+    return statusMap[backendStatus] || backendStatus
+  }
+
+  const formatStage = (backendStatus) => {
+    const stageMap = {
+      'draft': 'Draft',
+      'submitted': 'Application',
+      'under_review': 'Screening',
+      'shortlisted': 'Shortlisted',
+      'interview_scheduled': 'Interview',
+      'accepted': 'Offer',
+      'rejected': 'Closed',
+      'withdrawn': 'Withdrawn'
+    }
+    return stageMap[backendStatus] || 'Application'
+  }
+  
+  // Convert frontend status to backend status
+  const toBackendStatus = (frontendStatus) => {
+    const statusMap = {
+      'Draft': 'draft',
+      'Submitted': 'submitted',
+      'Documents Under Review': 'under_review',
+      'Shortlisted': 'shortlisted',
+      'Interview Scheduled': 'interview_scheduled',
+      'Offer Received': 'accepted',
+      'Not Selected': 'rejected',
+      'Withdrawn': 'withdrawn'
+    }
+    return statusMap[frontendStatus] || frontendStatus
+  }
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not set'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  // Map frontend document IDs to backend document types
+  const mapDocumentType = (frontendId) => {
+    const typeMap = {
+      'resume': 'resume',
+      'cv': 'cv',
+      'id': 'photo_id',
+      'transcript': 'transcript',
+      'cover': 'cover_letter',
+      'certificates': 'certificate',
+      'additional': 'additional'
+    }
+    return typeMap[frontendId] || 'additional'
+  }
+
+  const calculateProgress = (status) => {
+    const progressMap = {
+      'draft': 12,
+      'submitted': 28,
+      'under_review': 46,
+      'shortlisted': 65,
+      'interview_scheduled': 72,
+      'accepted': 95,
+      'rejected': 100,
+      'withdrawn': 100
+    }
+    return progressMap[status] || 0
+  }
+
+  // Fetch applications from backend
   useEffect(() => {
-    const fetchAllData = async () => {
-      if (!authToken) {
-        // No auth token → reset to defaults (logged out state)
-        setData(defaultData)
-        setLoading(false)
-        setApiAvailable(false)
-        return
-      }
-
-      setLoading(true)
-      setData(defaultData) // Reset to defaults first to clear stale data
+    const fetchApplications = async () => {
+      if (!profileLoaded) return
+      
       try {
-        const [dashboardRes, conversationsRes] = await Promise.allSettled([
-          getDashboardData(),
-          getConversationsApi(),
-        ])
-
-        // Dashboard data
-        if (dashboardRes.status === 'fulfilled' && dashboardRes.value?.data?.success && dashboardRes.value?.data?.data) {
-          const apiData = dashboardRes.value.data.data
-          setData((prev) => ({
-            ...prev,
-            account: { ...prev.account, ...apiData.account },
-            applications: apiData.applications?.length ? apiData.applications : prev.applications,
-            documents: apiData.documents?.length ? apiData.documents : prev.documents,
-            tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
-            tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
-            activity: apiData.activity?.length ? apiData.activity : prev.activity,
+        console.log('Fetching applications from backend...')
+        const response = await getMyApplications()
+        console.log('Applications API response:', response)
+        
+        if (response?.data?.success && response?.data?.data && response.data.data.length > 0) {
+          console.log('Found applications:', response.data.data.length)
+          const backendApplications = response.data.data.map(app => ({
+            id: app._id,
+            role: app.placementId?.course?.course || 'Placement Application',
+            company: app.placementId?.personal?.fullName || 'Unknown Company',
+            status: formatStatus(app.status),
+            stage: formatStage(app.status),
+            date: formatDate(app.createdAt),
+            advisor: app.placementId?.personal?.fullName || 'Not assigned',
+            progress: calculateProgress(app.status),
+            notes: app.coverLetter || '',
+            applicationId: app._id,
+            placementId: app.placementId?._id,
+            coverLetter: app.coverLetter,
+            additionalInfo: app.additionalInfo,
+            documents: app.documents,
+            statusHistory: {
+              submittedAt: app.submittedAt,
+              reviewedAt: app.reviewedAt,
+              respondedAt: app.respondedAt,
+              interviewDate: app.interviewDate
+            }
           }))
-          setApiAvailable(true)
-        }
-
-        // Conversations (shared two-way messaging)
-        if (conversationsRes.status === 'fulfilled' && conversationsRes.value?.data?.success && Array.isArray(conversationsRes.value.data.data)) {
-          setData((prev) => ({
-            ...prev,
-            threads: conversationsRes.value.data.data,
+          
+          setData((current) => ({
+            ...current,
+            applications: backendApplications
+          }))
+          console.log('Applications set in context:', backendApplications.length)
+        } else {
+          console.log('No applications found from backend, clearing default data')
+          // Clear default data if backend returns no applications
+          setData((current) => ({
+            ...current,
+            applications: []
           }))
         }
-      } catch {
-        console.warn('API unavailable, using default data')
-      } finally {
-        setLoading(false)
+      } catch (error) {
+        console.error('Failed to fetch applications:', error)
+        // Clear applications on error to show empty state instead of demo data
+        setData((current) => ({
+          ...current,
+          applications: []
+        }))
       }
     }
 
-    fetchAllData()
-  }, [authToken])
+    fetchApplications()
+  }, [profileLoaded])
+
+  // Fetch application statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!profileLoaded) return
+      
+      try {
+        const response = await getApplicationStats()
+        if (response?.data?.success && response?.data?.data) {
+          // Stats can be used for dashboard if needed
+          console.log('Application stats:', response.data.data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch application stats:', error)
+      }
+    }
+
+    fetchStats()
+  }, [profileLoaded])
+
+  // Fetch documents from backend
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (!profileLoaded) return
+      
+      try {
+        console.log('Fetching documents from backend...')
+        const response = await getMyDocuments()
+        console.log('Documents API response:', response)
+        
+        if (response?.data?.success && response?.data?.data) {
+          console.log('Found documents:', response.data.data.length)
+          const backendDocuments = response.data.data.map((doc) => ({
+            id: doc._id,
+            title: doc.documentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            type: doc.fileType.split('/')[1]?.toUpperCase() || 'FILE',
+            status: doc.isVerified ? 'Verified' : 'Uploaded',
+            updated: formatDate(doc.createdAt),
+            fileName: doc.fileName,
+            fileUrl: doc.fileUrl,
+            documentType: doc.documentType,
+            description: doc.description,
+            tags: doc.tags,
+            version: doc.version,
+            isLatest: doc.isLatest
+          }))
+          
+          setData((current) => ({
+            ...current,
+            documents: backendDocuments
+          }))
+          console.log('Documents set in context:', backendDocuments.length)
+        } else {
+          console.log('No documents found from backend, clearing default data')
+          // Clear default data if backend returns no documents
+          setData((current) => ({
+            ...current,
+            documents: []
+          }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch documents:', error)
+        // Clear documents on error to show empty state instead of demo data
+        setData((current) => ({
+          ...current,
+          documents: []
+        }))
+      }
+    }
+
+    fetchDocuments()
+  }, [profileLoaded])
 
   const addActivity = (title, detail, type = 'application') => {
     setData((current) => ({
@@ -201,143 +392,192 @@ export function PortalDataProvider({ children }) {
   const actions = useMemo(() => ({
     updateAccount: (account) => setData((current) => ({ ...current, account })),
     updatePreferences: (preferences) => setData((current) => ({ ...current, preferences })),
-    updateApplication: (id, changes) => {
-      setData((current) => ({
-        ...current,
-        applications: current.applications.map((app) => app.id === id ? { ...app, ...changes } : app),
-      }))
-      addActivity('Application updated', `${changes.role || 'Placement application'} details were changed.`, 'application')
+    updateApplication: async (id, changes) => {
+      try {
+        const { updateApplication: updateApplicationApi } = await import('../Api/application.js')
+        
+        // Convert frontend status to backend status if status is being updated
+        const backendChanges = { ...changes }
+        if (backendChanges.status) {
+          backendChanges.status = toBackendStatus(backendChanges.status)
+        }
+        
+        const response = await updateApplicationApi(id, backendChanges)
+        
+        if (response?.data?.success && response?.data?.data) {
+          const updatedApp = response.data.data
+          setData((current) => ({
+            ...current,
+            applications: current.applications.map((app) => app.id === id ? { 
+              ...app, 
+              ...changes,
+              // Update notes/coverLetter from backend response
+              notes: updatedApp.coverLetter !== undefined ? updatedApp.coverLetter : app.notes,
+              coverLetter: updatedApp.coverLetter !== undefined ? updatedApp.coverLetter : app.coverLetter,
+              status: formatStatus(updatedApp.status) || app.status,
+              stage: formatStage(updatedApp.status) || app.stage,
+              progress: calculateProgress(updatedApp.status) || app.progress
+            } : app),
+          }))
+          addActivity('Application updated', `${changes.role || 'Placement application'} details were changed.`, 'application')
+        }
+      } catch (error) {
+        console.error('Failed to update application:', error)
+        throw error
+      }
     },
-    addApplication: (application) => {
-      const id = `WM-PL-${Math.floor(1100 + Math.random() * 800)}`
-      setData((current) => ({
-        ...current,
-        applications: [{ ...application, id, date: today, status: 'Draft', stage: 'Draft', progress: 12 }, ...current.applications],
-        activity: [{ id: Date.now(), type: 'application', title: 'Application draft created', detail: `${application.role} added for ${application.company}.` }, ...current.activity],
-      }))
+    addApplication: async (applicationData) => {
+      try {
+        const { createApplication } = await import('../Api/application.js')
+        const response = await createApplication(applicationData)
+        
+        if (response?.data?.success && response?.data?.data) {
+          const newApp = response.data.data
+          const formattedApp = {
+            id: newApp._id,
+            role: newApp.placementId?.course?.course || applicationData.role || 'Placement Application',
+            company: newApp.placementId?.personal?.fullName || applicationData.company || 'Unknown Company',
+            status: 'Draft',
+            stage: 'Draft',
+            date: 'Today',
+            advisor: newApp.placementId?.personal?.fullName || 'Not assigned',
+            progress: 12,
+            notes: newApp.coverLetter || '',
+            applicationId: newApp._id,
+            placementId: newApp.placementId,
+            coverLetter: newApp.coverLetter,
+            additionalInfo: newApp.additionalInfo,
+            documents: newApp.documents
+          }
+          
+          setData((current) => ({
+            ...current,
+            applications: [formattedApp, ...current.applications],
+            activity: [{ id: Date.now(), type: 'application', title: 'Application draft created', detail: `${formattedApp.role} added for ${formattedApp.company}.` }, ...current.activity],
+          }))
+          
+          return formattedApp
+        }
+      } catch (error) {
+        console.error('Failed to create application:', error)
+        throw error
+      }
     },
     uploadDocument: async (id, file) => {
       if (!file) return
       try {
-        // Try backend API first
-        if (apiAvailable) {
-          await replaceDocumentApi(id, file)
+        const formData = new FormData()
+        formData.append('document', file)
+        // Map frontend ID to backend document type
+        const documentType = mapDocumentType(id)
+        formData.append('documentType', documentType)
+        
+        const response = await uploadDocumentApi(formData)
+        
+        if (response?.data?.success && response?.data?.data) {
+          const type = file.name.split('.').pop()?.toUpperCase() || 'FILE'
+          const newDoc = response.data.data
+          setData((current) => ({
+            ...current,
+            documents: current.documents.map((doc) => doc.id === id ? { 
+              ...doc, 
+              type, 
+              fileName: file.name, 
+              status: 'Uploaded', 
+              updated: 'Today',
+              id: newDoc._id,
+              fileUrl: newDoc.fileUrl
+            } : doc),
+            activity: [{ id: Date.now(), type: 'document', title: 'Document uploaded', detail: `${file.name} was updated.` }, ...current.activity],
+          }))
+          toast.success(`${file.name} uploaded successfully!`)
+        } else {
+          const errorMsg = response?.data?.message || 'Upload failed'
+          toast.error(errorMsg)
+          throw new Error(errorMsg)
         }
-      } catch {
-        // Fall back to local
+      } catch (error) {
+        console.error('Failed to upload document:', error)
+        throw error
       }
-      const type = file.name.split('.').pop()?.toUpperCase() || 'FILE'
-      setData((current) => ({
-        ...current,
-        documents: current.documents.map((doc) => doc.id === id ? { ...doc, type, fileName: file.name, status: 'Uploaded', updated: today } : doc),
-        activity: [{ id: Date.now(), type: 'document', title: 'Document uploaded', detail: `${file.name} was added to the document library.` }, ...current.activity],
-      }))
     },
     addDocument: async (file) => {
       if (!file) return
       try {
-        // Try backend API first
-        if (apiAvailable) {
-          const response = await uploadDocumentApi(file)
-          if (response?.data?.success && response?.data?.data) {
-            const newDoc = response.data.data
-            setData((current) => ({
-              ...current,
-              documents: [newDoc, ...current.documents],
-              activity: [{ id: Date.now(), type: 'document', title: 'Document uploaded', detail: `${file.name} was added to the document library.` }, ...current.activity],
-            }))
-            return
-          }
-        }
-      } catch {
-        // Fall back to local
-      }
-      const type = file.name.split('.').pop()?.toUpperCase() || 'FILE'
-      setData((current) => ({
-        ...current,
-        documents: [{ id: `doc-${Date.now()}`, title: file.name.replace(/\.[^.]+$/, ''), type, status: 'Uploaded', updated: today, fileName: file.name }, ...current.documents],
-      }))
-    },
-    verifyDocument: (id) => setData((current) => ({
-      ...current,
-      documents: current.documents.map((doc) => doc.id === id ? { ...doc, status: 'Verified', updated: today } : doc),
-    })),
-    removeDocument: async (id) => {
-      try {
-        // Try backend API first
-        if (apiAvailable) {
-          await deleteDocumentApi(id)
-        }
-      } catch {
-        // Fall back to local
-      }
-      setData((current) => ({
-        ...current,
-        documents: current.documents.filter((doc) => doc.id !== id),
-        activity: [{ id: Date.now(), type: 'document', title: 'Document deleted', detail: `Document was removed.` }, ...current.activity],
-      }))
-    },
-    refreshDocuments: async () => {
-      try {
-        const response = await getDocumentsApi()
+        const formData = new FormData()
+        formData.append('document', file)
+        formData.append('documentType', 'additional')
+        
+        console.log('Uploading document:', file.name, 'Type:', file.type, 'Size:', file.size)
+        
+        const response = await uploadDocumentApi(formData)
+        
+        console.log('Upload response:', response)
+        
         if (response?.data?.success && response?.data?.data) {
+          const type = file.name.split('.').pop()?.toUpperCase() || 'FILE'
+          const newDoc = response.data.data
+          const title = file.name.replace(/\.[^.]+$/, '')
+          
           setData((current) => ({
             ...current,
-            documents: response.data.data,
+            documents: [{ 
+              id: newDoc._id, 
+              title: title,
+              type, 
+              status: 'Uploaded', 
+              updated: 'Today', 
+              fileName: file.name,
+              fileUrl: newDoc.fileUrl,
+              documentType: 'additional'
+            }, ...current.documents],
+            activity: [{ id: Date.now(), type: 'document', title: 'Document uploaded', detail: `${file.name} was added to the document library.` }, ...current.activity],
           }))
-          setApiAvailable(true)
+          toast.success(`${file.name} uploaded successfully!`)
+        } else {
+          const errorMsg = response?.data?.message || 'Upload failed'
+          toast.error(errorMsg)
+          throw new Error(errorMsg)
         }
-      } catch {
-        // Backend not available
+      } catch (error) {
+        console.error('Failed to add document:', error)
+        const errorMsg = error.response?.data?.message || error.message || 'Failed to upload document'
+        toast.error(errorMsg)
+        throw error
       }
     },
-    createThread: async (name, role, subject, message, participantId) => {
-      // Use the shared conversation API if available
-      if (apiAvailable && participantId) {
-        try {
-          const response = await createConversationApi(participantId, subject)
-          if (response?.data?.success && response?.data?.data) {
-            const conv = response.data.data
-            const convId = conv._id?.toString() || conv.id
-            // If it already existed, we need to refresh conversations
-            if (response.data.existing) {
-              // Refresh conversations to get the latest
-              const refreshRes = await getConversationsApi()
-              if (refreshRes?.data?.success && Array.isArray(refreshRes.data.data)) {
-                setData((current) => ({
-                  ...current,
-                  threads: refreshRes.data.data,
-                }))
-              }
-              return convId
-            }
-            // New conversation — add to local state
-            const otherParticipantId = conv.participants?.find(
-              (p) => p.toString() !== participantId.toString()
-            )
-            const otherName = conv.participantNames?.[otherParticipantId?.toString()] || name
-            const newThread = {
-              id: convId,
-              name: otherName,
-              role: role || 'Registered User',
-              subject: conv.subject || subject || 'New conversation',
-              time: 'Just now',
-              unread: false,
-              messages: [],
-            }
-            setData((current) => ({
-              ...current,
-              threads: [newThread, ...current.threads],
-              activity: [{ id: Date.now(), type: 'message', title: 'New conversation', detail: `Started conversation with ${otherName}` }, ...current.activity],
-            }))
-            return convId
-          }
-        } catch {
-          // fall through to local
+    verifyDocument: async (id) => {
+      try {
+        const response = await verifyDocumentApi(id)
+        
+        if (response?.data?.success) {
+          setData((current) => ({
+            ...current,
+            documents: current.documents.map((doc) => doc.id === id ? { ...doc, status: 'Verified', updated: 'Today' } : doc),
+          }))
         }
+      } catch (error) {
+        console.error('Failed to verify document:', error)
+        throw error
       }
-
-      // Fallback: local-only thread
+    },
+    removeDocument: async (id) => {
+      try {
+        await deleteDocumentApi(id)
+        
+        setData((current) => ({
+          ...current,
+          documents: current.documents.filter((doc) => doc.id !== id),
+          activity: [{ id: Date.now(), type: 'document', title: 'Document deleted', detail: `Document was removed.` }, ...current.activity],
+        }))
+        toast.success('Document deleted successfully!')
+      } catch (error) {
+        console.error('Failed to delete document:', error)
+        toast.error('Failed to delete document. Please try again.')
+        throw error
+      }
+    },
+    createThread: (name, role, subject, message) => {
       const newId = Date.now()
       const newThread = {
         id: newId,
@@ -361,18 +601,8 @@ export function PortalDataProvider({ children }) {
       ...current,
       threads: current.threads.map((thread) => thread.id === id ? { ...thread, unread: false } : thread),
     })),
-    sendMessage: async (threadId, body) => {
+    sendMessage: (threadId, body) => {
       if (!body.trim()) return
-
-      // Try shared conversation API first
-      if (apiAvailable) {
-        try {
-          await sendConversationMessageApi(threadId, body)
-        } catch {
-          // fall through to local
-        }
-      }
-
       setData((current) => ({
         ...current,
         threads: current.threads.map((thread) => thread.id === threadId ? {
@@ -384,145 +614,74 @@ export function PortalDataProvider({ children }) {
         activity: [{ id: Date.now(), type: 'message', title: 'Message sent', detail: body.trim().slice(0, 80) }, ...current.activity],
       }))
     },
-    receiveMessage: (conversationId, message) => {
-      if (!conversationId || !message) return
-      setData((current) => {
-        const threadExists = current.threads.some((t) => t.id?.toString() === conversationId?.toString())
-        if (!threadExists) {
-          // If the thread doesn't exist locally, trigger dashboard data fetch to retrieve the thread
-          getDashboardData()
-            .then(res => {
-              if (res?.data?.success && res?.data?.data) {
-                const apiData = res.data.data
-                setData(prev => ({
-                  ...prev,
-                  account: { ...prev.account, ...apiData.account },
-                  applications: apiData.applications?.length ? apiData.applications : prev.applications,
-                  documents: apiData.documents?.length ? apiData.documents : prev.documents,
-                  threads: apiData.threads?.length ? apiData.threads : prev.threads,
-                  tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
-                  tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
-                  activity: apiData.activity?.length ? apiData.activity : prev.activity,
-                }))
-              }
-            })
-            .catch(() => {})
-          return current
-        }
-
-        return {
-          ...current,
-          threads: current.threads.map((thread) => {
-            if (thread.id?.toString() === conversationId?.toString()) {
-              // Avoid duplicates
-              const msgExists = thread.messages.some((m) => 
-                (m._id && m._id === message._id) || 
-                (m.body === message.body && m.from === message.from)
-              )
-              if (msgExists) return thread
-              
-              return {
-                ...thread,
-                time: message.time || 'Just now',
-                unread: true,
-                messages: [...thread.messages, {
-                  _id: message._id,
-                  from: message.from,
-                  body: message.body,
-                  own: message.own || false,
-                  time: message.time || 'Just now'
-                }]
-              }
-            }
-            return thread
-          })
-        }
-      })
-    },
-    receiveConversation: (conversation) => {
-      if (!conversation) return
-      setData((current) => {
-        const threadId = conversation.id?.toString() || conversation._id?.toString()
-        const threadExists = current.threads.some((t) => t.id?.toString() === threadId)
-        if (threadExists) return current
-
-        const newThread = {
-          id: threadId,
-          name: conversation.name,
-          role: conversation.role || 'Registered User',
-          subject: conversation.subject || 'New conversation',
-          time: conversation.time || 'Just now',
-          unread: conversation.unread ?? true,
-          messages: conversation.messages || []
-        }
-
-        return {
-          ...current,
-          threads: [newThread, ...current.threads],
-          activity: [
-            { id: Date.now(), type: 'message', title: 'New conversation', detail: `Started conversation with ${conversation.name}` },
-            ...current.activity
-          ]
-        }
-      })
-    },
-    completeTask: async (id) => {
-      // Try API toggle, fall back to local
-      if (apiAvailable) {
-        try {
-          await toggleTaskApi(id)
-        } catch {
-          // fall through to local
-        }
-      }
-
+    completeTask: (id) => {
       setData((current) => ({
         ...current,
         tasks: current.tasks.map((task) => task.id === id ? { ...task, done: !task.done } : task),
       }))
     },
-    createTicket: async (subject) => {
+    createTicket: (subject) => {
       if (!subject.trim()) return
-
-      // Try API, fall back to local
-      if (apiAvailable) {
-        try {
-          await createTicketApi(subject)
-        } catch {
-          // fall through to local
-        }
-      }
-
       setData((current) => ({
         ...current,
-        tickets: [{ id: `WM-HLP-${Math.floor(300 + Math.random() * 600)}`, subject: subject.trim(), status: 'Open', date: today }, ...current.tickets],
+        tickets: [{ id: `WM-HLP-${Math.floor(300 + Math.random() * 600)}`, subject: subject.trim(), status: 'Open', date: 'Today' }, ...current.tickets],
       }))
     },
-    resetPortalData: () => setData(defaultData),
-    refreshDashboard: async () => {
+    submitApplication: async (id) => {
       try {
-        const response = await getDashboardData()
+        const { updateApplicationStatus } = await import('../Api/application.js')
+        const response = await updateApplicationStatus(id, 'submitted')
+        
         if (response?.data?.success && response?.data?.data) {
-          const apiData = response.data.data
-          setData((prev) => ({
-            ...prev,
-            account: { ...prev.account, ...apiData.account },
-            applications: apiData.applications?.length ? apiData.applications : prev.applications,
-            documents: apiData.documents?.length ? apiData.documents : prev.documents,
-            threads: apiData.threads?.length ? apiData.threads : prev.threads,
-            tasks: apiData.tasks?.length ? apiData.tasks : prev.tasks,
-            tickets: apiData.tickets?.length ? apiData.tickets : prev.tickets,
-            activity: apiData.activity?.length ? apiData.activity : prev.activity,
+          const updatedApp = response.data.data
+          setData((current) => ({
+            ...current,
+            applications: current.applications.map((app) => app.id === id ? {
+              ...app,
+              status: 'Submitted',
+              stage: 'Application',
+              progress: 28,
+              date: 'Today'
+            } : app),
           }))
-          setApiAvailable(true)
+          addActivity('Application submitted', `${updatedApp.placementId?.course?.course || 'Application'} submitted for review.`, 'application')
         }
-      } catch {
-        // Backend not available
+      } catch (error) {
+        console.error('Failed to submit application:', error)
+        throw error
       }
     },
-  }), [apiAvailable])
+    
+    deleteApplication: async (id) => {
+      try {
+        const { deleteApplication: deleteApplicationApi } = await import('../Api/application.js')
+        await deleteApplicationApi(id)
+        
+        setData((current) => ({
+          ...current,
+          applications: current.applications.filter((app) => app.id !== id),
+          activity: [{ id: Date.now(), type: 'application', title: 'Application deleted', detail: 'Application was removed.' }, ...current.activity],
+        }))
+      } catch (error) {
+        console.error('Failed to delete application:', error)
+        throw error
+      }
+    },
+    
+    resetPortalData: () => setData(defaultData),
+    logout: () => {
+      setData(defaultData)
+      setProfileLoaded(false)
+      setIsAuthenticated(false)
+    },
+  }), [])
 
-  const value = useMemo(() => ({ data, loading, ...actions }), [data, loading, actions])
+  const value = useMemo(() => ({ 
+    data, 
+    profileLoaded,
+    isAuthenticated,
+    ...actions 
+  }), [data, profileLoaded, isAuthenticated, actions])
 
   return (
     <PortalDataContext.Provider value={value}>

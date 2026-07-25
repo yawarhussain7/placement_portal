@@ -1,6 +1,6 @@
 import React from 'react';
 
-const StudentDocRow = ({ name, size, date, isRequired, status }) => {
+const StudentDocRow = ({ name, size, date, isRequired, status, onUpload, onReupload }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Uploaded': 
@@ -36,11 +36,11 @@ const StudentDocRow = ({ name, size, date, isRequired, status }) => {
           {status}
         </span>
         {status === 'Uploaded' ? (
-          <button className="text-xs font-bold text-gray-600 hover:text-gray-800 border border-gray-200 bg-white px-2.5 py-1 rounded-lg transition-colors">
+          <button onClick={() => onReupload && onReupload(name)} className="text-xs font-bold text-gray-600 hover:text-gray-800 border border-gray-200 bg-white px-2.5 py-1 rounded-lg transition-colors">
             Re-upload
           </button>
         ) : (
-          <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700 border border-emerald-100 bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors">
+          <button onClick={() => onUpload && onUpload(name)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 border border-emerald-100 bg-emerald-50 px-2.5 py-1 rounded-lg transition-colors">
             Upload
           </button>
         )}

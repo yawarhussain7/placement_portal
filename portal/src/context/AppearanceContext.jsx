@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import api from '../Api/axios.js';
+import { usePortalData } from './PortalDataContext';
 
 const AppearanceContext = createContext(null);
 
@@ -19,29 +20,33 @@ export function AppearanceProvider({ children }) {
     }
   });
 
-  // Fetch theme preference from backend on startup or when auth token changes
+  const { isAuthenticated, profileLoaded } = usePortalData();
+
+  // Fetch theme preference from backend on startup or when auth status changes
   useEffect(() => {
     const fetchTheme = async () => {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      // Only fetch theme if user is authenticated (using cookie-based auth)
+      if (!profileLoaded || !isAuthenticated) {
+        // User is not logged in, use default theme
+        return;
+      }
 
       try {
-        const res = await api.get('/profile/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const res = await api.get('/auth/profile');
         if (res.data?.success && res.data?.data?.theme) {
           setAppearance({ theme: res.data.data.theme });
         }
       } catch (err) {
-        console.warn('Failed to fetch theme from backend:', err);
+        // Don't log 401 errors as they're expected when not logged in
+        if (err.response?.status !== 401) {
+          console.warn('Failed to fetch theme from backend:', err.message);
+        }
       }
     };
 
     fetchTheme();
 
-    // Listen to token changes to fetch the theme immediately upon login
+    // Listen to auth changes to fetch the theme immediately upon login/logout
     const handleAuthChange = () => {
       fetchTheme();
     };
@@ -49,7 +54,7 @@ export function AppearanceProvider({ children }) {
     return () => {
       window.removeEventListener('auth-token-changed', handleAuthChange);
     };
-  }, []);
+  }, [profileLoaded, isAuthenticated]);
 
   // Save theme and apply it locally
   useEffect(() => {
@@ -57,28 +62,30 @@ export function AppearanceProvider({ children }) {
     localStorage.setItem('appearance', JSON.stringify(appearance));
 
     const saveTheme = async () => {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      // Only save theme if user is authenticated (using cookie-based auth)
+      if (!profileLoaded || !isAuthenticated) {
+        return;
+      }
 
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const userId = payload.id;
-        if (userId) {
-          await api.put(`/profile/profile-update/${userId}`, {
+        // Get user ID from the profile endpoint
+        const res = await api.get('/auth/profile');
+        if (res.data?.success && res.data?.data?._id) {
+          const userId = res.data.data._id;
+          await api.put(`/auth/profile-update/${userId}`, {
             theme: appearance.theme
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
           });
         }
       } catch (err) {
-        console.warn('Failed to save theme to backend:', err);
+        // Silently fail if user is not authenticated
+        if (err.response?.status !== 401) {
+          console.warn('Failed to save theme to backend:', err);
+        }
       }
     };
 
     saveTheme();
-  }, [appearance]);
+  }, [appearance, profileLoaded, isAuthenticated]);
 
   // re-apply when system color scheme changes
   useEffect(() => {

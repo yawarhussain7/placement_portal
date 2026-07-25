@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RecentApplicationsTable = ({ applications = [] }) => {
+const RecentApplicationsTable = ({ applications = [], onViewAll, onViewApplication }) => {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'Selected': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
@@ -15,7 +15,7 @@ const RecentApplicationsTable = ({ applications = [] }) => {
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="flex items-center justify-between p-6 border-b border-gray-50">
         <h3 className="font-bold text-gray-900 text-base">Recent Applications</h3>
-        <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer">View all</button>
+        <button onClick={onViewAll} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer">View all</button>
       </div>
       <div className="overflow-x-auto">
         {applications.length > 0 ? (
@@ -46,7 +46,7 @@ const RecentApplicationsTable = ({ applications = [] }) => {
                     </span>
                   </td>
                   <td className="px-6 py-3.5 text-right">
-                    <button className="text-xs font-bold text-emerald-600 hover:text-emerald-800 bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100/30 px-2.5 py-1 rounded transition-colors cursor-pointer">
+                    <button onClick={() => onViewApplication && onViewApplication(app)} className="text-xs font-bold text-emerald-600 hover:text-emerald-800 bg-emerald-50/50 hover:bg-emerald-50 border border-emerald-100/30 px-2.5 py-1 rounded transition-colors cursor-pointer">
                       View
                     </button>
                   </td>

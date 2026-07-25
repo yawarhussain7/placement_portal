@@ -4,7 +4,7 @@ import { usePortalData } from './PortalDataContext'
 
 const SocketContext = createContext(null)
 
-const SOCKET_URL = 'http://localhost:2000'
+const SOCKET_URL = 'http://localhost:8000'
 
 export function SocketProvider({ children }) {
   const socketRef = useRef(null)
@@ -25,8 +25,10 @@ export function SocketProvider({ children }) {
   useEffect(() => {
     if (!userId) return
 
+    // Backend uses httpOnly cookies for authentication
+    // Socket.io will automatically send cookies with the connection
     const socket = io(SOCKET_URL, {
-      auth: { userId },
+      withCredentials: true,
       transports: ['websocket', 'polling'],
     })
 

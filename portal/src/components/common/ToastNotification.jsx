@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
-import { useNotification } from '../context/NotificationContext';
+import { useNotification } from '../../context/NotificationContext.jsx';
 
 const ToastNotification = () => {
   const { notifications, removeNotification } = useNotification();

@@ -54,7 +54,7 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
   };
 
   return (
-    <div className=" p-6 bg-white rounded-xl shadow-sm border border-gray-100 text-sm">
+    <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100 text-sm">
       <form onSubmit={handleSubmit} className="space-y-6">
 
         {/* Course */}
@@ -164,7 +164,7 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
             Mode of Study <span className="text-red-500">*</span>
           </label>
 
-          <div className="grid grid-cols-3 gap-2 max-w-xl">
+          <div className="grid grid-cols-3 gap-3 max-w-xl">
             {['full-time', 'part-time', 'online'].map((mode) => {
               const isActive = studyMode === mode;
 
@@ -173,18 +173,18 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
                   type="button"
                   key={mode}
                   onClick={() => setStudyMode(mode)}
-                  className={`py-2.5 px-3 rounded-lg font-medium border text-center transition-all flex items-center justify-center gap-2 ${
+                  className={`py-3 px-4 rounded-xl font-medium border-2 text-center capitalize transition-all flex flex-col items-center justify-center gap-2 shadow-sm hover:shadow-md ${
                     isActive
-                      ? 'bg-green-50 border-green-600 text-green-700 font-semibold'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                      ? 'bg-emerald-50 border-emerald-600 text-emerald-700 font-semibold shadow-md'
+                      : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-400'
                   }`}
                 >
-                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
-                    isActive ? 'border-green-600' : 'border-gray-300'
+                  <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    isActive ? 'border-emerald-600 bg-emerald-50' : 'border-gray-300'
                   }`}>
-                    {isActive && <span className="w-2 h-2 bg-green-600 rounded-full" />}
+                    {isActive && <span className="w-2.5 h-2.5 bg-emerald-600 rounded-full" />}
                   </span>
-                  <span className="capitalize">{mode.replace('-', ' ')}</span>
+                  <span className="text-sm">{mode.replace('-', ' ')}</span>
                 </button>
               );
             })}
@@ -247,7 +247,7 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center space-x-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors"
+            className="flex items-center space-x-2 border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors"
           >
             <ArrowLeft size={14} />
             <span>Back</span>
@@ -255,7 +255,7 @@ const EducationPlacementForm = ({ onBack, onNext }) => {
 
           <button
             type="submit"
-            className="flex items-center space-x-2 bg-[#12692e] hover:bg-emerald-800 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-sm"
+            className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-5 py-2.5 rounded-lg transition-colors shadow-md hover:shadow-lg"
           >
             <span>Save & Continue</span>
             <ArrowRight size={14} />

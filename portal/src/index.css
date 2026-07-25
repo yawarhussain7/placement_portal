@@ -1,44 +1,78 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════
-   DESIGN TOKENS — Light (default)
+   DESIGN TOKENS — Professional Light (default)
 ═══════════════════════════════════════════════ */
 :root {
+  /* Backgrounds - Refined neutral palette */
   --bg-base:        #f8fafc;
   --bg-surface:     #ffffff;
-  --bg-subtle:      #f1f5f9;
-  --bg-muted:       #e2e8f0;
+  --bg-subtle:      #f8fafc;
+  --bg-muted:       #f1f5f9;
+  --bg-hover:       #f1f5f9;
 
-  --border-base:    #e2e8f0;
-  --border-subtle:  #f1f5f9;
+  /* Borders - Minimal approach */
+  --border-base:    transparent;
+  --border-subtle:  transparent;
+  --border-focus:   #cbd5e1;
 
+  /* Text - High contrast for readability */
   --text-primary:   #0f172a;
   --text-secondary: #475569;
   --text-muted:     #94a3b8;
   --text-inverse:   #ffffff;
 
-  --accent:         #16a34a;
-  --accent-hover:   #15803d;
-  --accent-subtle:  #f0fdf4;
-  --accent-text:    #15803d;
+  /* Accent - Professional green */
+  --accent:         #059669;
+  --accent-hover:   #047857;
+  --accent-subtle:  #ecfdf5;
+  --accent-text:    #065f46;
+  --accent-light:   #d1fae5;
 
-  --danger:         #ef4444;
+  /* Danger - Clear but not harsh */
+  --danger:         #dc2626;
   --danger-subtle:  #fef2f2;
-  --danger-text:    #dc2626;
+  --danger-text:    #991b1b;
 
+  /* Warning */
+  --warning:        #d97706;
+  --warning-subtle: #fffbeb;
+  --warning-text:   #92400e;
+
+  /* Info */
+  --info:           #2563eb;
+  --info-subtle:    #eff6ff;
+  --info-text:      #1e40af;
+
+  /* Success */
+  --success:        #059669;
+  --success-subtle: #ecfdf5;
+  --success-text:   #065f46;
+
+  /* Surfaces */
   --header-bg:      #ffffff;
   --sidebar-bg:     #ffffff;
   --dropdown-bg:    #ffffff;
+  --card-bg:        #ffffff;
+  --glass-bg:       rgba(255, 255, 255, 0.8);
 
+  /* Inputs */
   --input-bg:       #ffffff;
   --input-border:   #e2e8f0;
   --input-text:     #0f172a;
   --placeholder:    #94a3b8;
+
+  /* Shadows - Enhanced for depth and modern look */
+  --shadow-sm:      0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+  --shadow-md:      0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg:      0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --shadow-xl:      0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl:     0 25px 50px -12px rgb(0 0 0 / 0.15);
 }
 
 /* ═══════════════════════════════════════════════
    DESIGN TOKENS — Dark
-═══════════════════════════════════════════════ */
+══════════════════════════════════════════════ */
 [data-theme="dark"] {
   color-scheme: dark;
 
@@ -46,9 +80,11 @@
   --bg-surface:     #1e293b;
   --bg-subtle:      #1e293b;
   --bg-muted:       #334155;
+  --bg-hover:       #1e293b;
 
   --border-base:    #334155;
   --border-subtle:  #1e293b;
+  --border-focus:   #475569;
 
   --text-primary:   #f1f5f9;
   --text-secondary: #cbd5e1;
@@ -59,19 +95,39 @@
   --accent-hover:   #16a34a;
   --accent-subtle:  #052e16;
   --accent-text:    #4ade80;
+  --accent-light:   #064e3b;
 
   --danger:         #f87171;
   --danger-subtle:  #2d0a0a;
-  --danger-text:    #f87171;
+  --danger-text:    #fca5a5;
+
+  --warning:        #fbbf24;
+  --warning-subtle: #451a03;
+  --warning-text:   #fcd34d;
+
+  --info:           #60a5fa;
+  --info-subtle:    #172554;
+  --info-text:      #93c5fd;
+
+  --success:        #22c55e;
+  --success-subtle: #052e16;
+  --success-text:   #4ade80;
 
   --header-bg:      #1e293b;
   --sidebar-bg:     #1e293b;
   --dropdown-bg:    #1e293b;
+  --card-bg:        #1e293b;
 
   --input-bg:       #0f172a;
   --input-border:   #334155;
   --input-text:     #f1f5f9;
   --placeholder:    #475569;
+
+  --shadow-sm:      0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md:      0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg:      0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl:      0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  --shadow-2xl:     0 25px 50px -12px rgb(0 0 0 / 0.4);
 }
 
 /* ═══════════════════════════════════════════════
@@ -95,17 +151,19 @@ body {
 /* ═══════════════════════════════════════════════
    SEMANTIC UTILITY CLASSES
    Use these in components instead of hardcoded Tailwind colors
-═══════════════════════════════════════════════ */
+══════════════════════════════════════════════ */
 
 /* backgrounds */
 .bg-base     { background-color: var(--bg-base); }
 .bg-surface  { background-color: var(--bg-surface); }
 .bg-subtle   { background-color: var(--bg-subtle); }
 .bg-muted    { background-color: var(--bg-muted); }
+.bg-hover    { background-color: var(--bg-hover); }
 
 /* borders */
 .border-base   { border-color: var(--border-base); }
 .border-subtle { border-color: var(--border-subtle); }
+.border-focus  { border-color: var(--border-focus); }
 
 /* text */
 .text-primary   { color: var(--text-primary); }
@@ -115,6 +173,7 @@ body {
 /* accent */
 .bg-accent        { background-color: var(--accent); }
 .bg-accent-subtle { background-color: var(--accent-subtle); }
+.bg-accent-light  { background-color: var(--accent-light); }
 .text-accent      { color: var(--accent-text); }
 .border-accent    { border-color: var(--accent); }
 .hover-accent:hover { background-color: var(--accent-hover); }
@@ -123,6 +182,21 @@ body {
 .bg-danger        { background-color: var(--danger); }
 .bg-danger-subtle { background-color: var(--danger-subtle); }
 .text-danger      { color: var(--danger-text); }
+
+/* warning */
+.bg-warning        { background-color: var(--warning); }
+.bg-warning-subtle { background-color: var(--warning-subtle); }
+.text-warning      { color: var(--warning-text); }
+
+/* info */
+.bg-info        { background-color: var(--info); }
+.bg-info-subtle { background-color: var(--info-subtle); }
+.text-info      { color: var(--info-text); }
+
+/* success */
+.bg-success        { background-color: var(--success); }
+.bg-success-subtle { background-color: var(--success-subtle); }
+.text-success      { color: var(--success-text); }
 
 /* inputs */
 .input-base {
@@ -135,30 +209,54 @@ body {
 
 /* surface card */
 .card {
-  background-color: var(--bg-surface);
-  border-color: var(--border-base);
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 /* header */
 .header-surface {
   background-color: var(--header-bg);
-  border-color: var(--border-base);
+  backdrop-filter: blur(12px);
   color: var(--text-primary);
   transition: background-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 /* sidebar */
 .sidebar-surface {
   background-color: var(--sidebar-bg);
-  border-color: var(--border-base);
+  backdrop-filter: blur(12px);
   transition: background-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 /* dropdown */
 .dropdown-surface {
   background-color: var(--dropdown-bg);
-  border-color: var(--border-base);
+  backdrop-filter: blur(12px);
   color: var(--text-primary);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Professional shadows */
+.shadow-pro-sm { box-shadow: var(--shadow-sm); }
+.shadow-pro-md { box-shadow: var(--shadow-md); }
+.shadow-pro-lg { box-shadow: var(--shadow-lg); }
+.shadow-pro-xl { box-shadow: var(--shadow-xl); }
+.shadow-pro-2xl { box-shadow: var(--shadow-2xl); }
+
+/* Glass morphism effect */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* ═══════════════════════════════════════════════
@@ -169,3 +267,51 @@ body {
   -ms-overflow-style: none;
 }
 *::-webkit-scrollbar { display: none; }
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}

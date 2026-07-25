@@ -1,13 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/common/Sidebar'
 import Header from '../components/common/Header';   
 import ApplicationStatCard from '../components/application/ApplicationStatCard'
 import ApplicationRowCard from '../components/application/ApplicationRowCard';
+import { getApplications } from '../api/applications.js';
 
 const Applications = () => {
   const [activeTab, setActiveTab] = useState('applications');
   const [currentFilter, setCurrentFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [applications, setApplications] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    inReview: 0,
+    selected: 0,
+    offered: 0,
+    rejected: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  const handleViewApplication = (app) => {
+    console.log('View application:', app);
+    // Navigate to application details
+  };
+
+  const handleExport = () => {
+    console.log('Export clicked');
+    // Implement export functionality
+  };
+
+  const handleFilters = () => {
+    console.log('Filters clicked');
+    // Implement filters functionality
+  };
 
   // Explicit design token config definitions from visual assets
   const cardColorConfigs = {
@@ -19,26 +44,65 @@ const Applications = () => {
   };
 
   const tabs = [
-    { label: 'All', count: 209 },
-    { label: 'In Review', count: 54 },
-    { label: 'Selected', count: 87 },
-    { label: 'Offered', count: 31 },
-    { label: 'Rejected', count: 37 }
+    { label: 'All', count: stats.total },
+    { label: 'In Review', count: stats.inReview },
+    { label: 'Selected', count: stats.selected },
+    { label: 'Offered', count: stats.offered },
+    { label: 'Rejected', count: stats.rejected }
   ];
 
-  // Exact UI application records mapped directly from ApplicationsPage.jpg
-  const applicationsData = [
-    { company: 'Google', role: 'Software Engineer', package: '28 LPA', location: 'Hyderabad', date: 'Jan 12, 2025', status: 'In Review', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg> },
-    { company: 'Microsoft', role: 'Product Analyst', package: '24 LPA', location: 'Bangalore', date: 'Jan 9, 2025', status: 'Selected', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> },
-    { company: 'Deloitte', role: 'Business Analyst', package: '14 LPA', location: 'Mumbai', date: 'Jan 6, 2025', status: 'Pending', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-    { company: 'Infosys', role: 'Systems Engineer', package: '7 LPA', location: 'Pune', date: 'Dec 28, 2024', status: 'Rejected', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg> },
-    { company: 'Amazon', role: 'SDE I', package: '22 LPA', location: 'Bangalore', date: 'Dec 22, 2024', status: 'Offered', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 110 4 2 2 0 010-4z" /></svg> },
-    { company: 'TCS', role: 'Associate Engineer', package: '8 LPA', location: 'Chennai', date: 'Dec 18, 2024', status: 'Selected', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> }
-  ];
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        const filters = {};
+        
+        if (currentFilter !== 'All') {
+          filters.status = currentFilter.toLowerCase().replace('in review', 'in-review');
+        }
+        if (searchQuery) {
+          filters.search = searchQuery;
+        }
+        
+        const response = await getApplications(filters);
+        
+        if (response.success && response.data) {
+          // Transform backend data to match ApplicationRowCard component format
+          const transformedApps = (response.data.applications || []).map(app => ({
+            id: app.id,
+            company: app.institution || 'Unknown Institution',
+            role: app.course || 'Placement Application',
+            package: 'N/A',
+            location: 'N/A',
+            date: app.date,
+            status: app.status,
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M12 18h.01M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            ),
+            studentName: app.studentName,
+            email: app.email,
+            phone: app.phone
+          }));
+          
+          setApplications(transformedApps);
+          setStats(response.data.stats || stats);
+        }
+      } catch (err) {
+        console.error('Failed to fetch applications:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredApplications = applicationsData.filter(app => {
-    const matchesSearch = app.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          app.role.toLowerCase().includes(searchQuery.toLowerCase());
+    fetchApplications();
+  }, [currentFilter, searchQuery]);
+
+  const filteredApplications = applications.filter(app => {
+    const matchesSearch = app.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          app.course?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          app.institution?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = currentFilter === 'All' || app.status === currentFilter;
     return matchesSearch && matchesTab;
   });
@@ -88,14 +152,14 @@ const Applications = () => {
                   />
                 </div>
 
-                <button className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                <button onClick={handleFilters} className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
                   <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
                   Filters
                 </button>
 
-                  <button className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10">
+                  <button onClick={handleExport} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-500/10">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
@@ -136,35 +200,41 @@ const Applications = () => {
             </div>
 
             {/* Core Application Row Mapping Loop Container */}
-            <div className="space-y-3 pt-2">
-              {filteredApplications.length > 0 ? (
-                filteredApplications.map((app, idx) => (
-                  <ApplicationRowCard key={idx} application={app} />
-                ))
-              ) : (
-                <div className="text-center py-10 text-xs font-semibold text-gray-400">
-                  No applications matched the tracking criteria.
-                </div>
-              )}
+               <div className="space-y-3 pt-2">
+                 {loading ? (
+                   <div className="text-center py-10 text-xs font-semibold text-gray-400">
+                     Loading applications...
+                   </div>
+                 ) : filteredApplications.length > 0 ? (
+                   filteredApplications.map((app, idx) => (
+                     <ApplicationRowCard key={app.id || idx} application={app} onView={handleViewApplication} />
+                   ))
+               ) : (
+                 <div className="text-center py-10 text-xs font-semibold text-gray-400">
+                   No applications matched the tracking criteria.
+                 </div>
+               )}
             </div>
 
             {/* Interface Footer Pagination Segment */}
-            <div className="flex items-center justify-between pt-4 bg-white text-xs font-semibold text-gray-400">
-              <span>Showing 1-{filteredApplications.length} of 209 applications</span>
-              
-              <div className="flex items-center gap-1">
-                <button className="p-1.5 border border-gray-150 rounded-md hover:bg-gray-50 transition-colors text-gray-400">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <button className="w-7 h-7 bg-emerald-600 text-white rounded-md text-xs font-bold shadow-sm shadow-emerald-500/10">1</button>
-                <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">2</button>
-                <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">3</button>
-                <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">4</button>
-                <button className="p-1.5 border border-gray-150 rounded-md hover:bg-gray-50 transition-colors text-gray-400">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
-                </button>
-              </div>
-            </div>
+            {!loading && filteredApplications.length > 0 && (
+              <div className="flex items-center justify-between pt-4 bg-white text-xs font-semibold text-gray-400">
+                <span>Showing {filteredApplications.length} of {applications.length} applications</span>
+                 
+                 <div className="flex items-center gap-1">
+                   <button onClick={() => console.log('Previous page')} className="p-1.5 border border-gray-150 rounded-md hover:bg-gray-50 transition-colors text-gray-400 disabled:opacity-50">
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+                   </button>
+                   <button className="w-7 h-7 bg-emerald-600 text-white rounded-md text-xs font-bold shadow-sm shadow-emerald-500/10">1</button>
+                   <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">2</button>
+                   <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">3</button>
+                   <button className="w-7 h-7 hover:bg-gray-50 text-gray-600 border border-transparent hover:border-gray-150 rounded-md transition-colors">4</button>
+                   <button className="p-1.5 border border-gray-150 rounded-md hover:bg-gray-50 transition-colors text-gray-400">
+                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                   </button>
+                 </div>
+               </div>
+            )}
 
           </div>
         </main>

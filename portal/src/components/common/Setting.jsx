@@ -77,6 +77,7 @@ const strengthLabel = pwd => {
 
 const Setting = () => {
   const navigate = useNavigate();
+  const { logout } = usePortalData();
   const [activeTab, setActiveTab] = useState('profile');
 
   const [profile, setProfile] = useState({
@@ -149,7 +150,9 @@ const Setting = () => {
                 } catch {
                   // fall through even if API fails
                 }
-                localStorage.removeItem('auth_token');
+                // Backend clears the httpOnly cookie, just clear cached data
+                localStorage.removeItem('webmantisPortalData');
+                logout();
                 toast.success('Logged out successfully. See you soon!');
                 setTimeout(() => navigate('/auth/login'), 500);
               }}

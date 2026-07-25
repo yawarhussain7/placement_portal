@@ -1,6 +1,5 @@
 import React from 'react'
 import { Route, Routes, Navigate } from 'react-router-dom'
-import ProtectedRoute from './ProtectedRoute'
 
 import PersonalDetailsPage from '../pages/new_placement/PersonalDetailsPage'
 import PlacementPerformancePage from '../pages/new_placement/placement_performancePage/Placement_Performance'
@@ -15,47 +14,27 @@ const Placement_Route = () => {
 
       <Route
         path="personal-details"
-        element={
-          <ProtectedRoute>
-            <PersonalDetailsPage />
-          </ProtectedRoute>
-        }
+        element={<PersonalDetailsPage />}
       />
 
       <Route
         path="course-details"
-        element={
-          <ProtectedRoute>
-            <Course />
-          </ProtectedRoute>
-        }
+        element={<Course />}
       />
 
       <Route
         path="placement-preference"
-        element={
-          <ProtectedRoute>
-            <PlacementPerformancePage />
-          </ProtectedRoute>
-        }
+        element={<PlacementPerformancePage />}
       />
 
       <Route
         path="documents"
-        element={
-          <ProtectedRoute>
-            <Documents />
-          </ProtectedRoute>
-        }
+        element={<Documents />}
       />
 
       <Route
         path="report-submit"
-        element={
-          <ProtectedRoute>
-            <ReportS />
-          </ProtectedRoute>
-        }
+        element={<ReportS />}
       />
     </Routes>
   )

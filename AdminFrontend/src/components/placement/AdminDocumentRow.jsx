@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiFile, FiCheckCircle, FiXCircle, FiAlertCircle, FiEye } from 'react-icons/fi';
 
-const AdminDocumentRow = ({ doc, onVerify, onReject }) => {
+const AdminDocumentRow = ({ doc, onVerify, onReject, onView }) => {
   const getStatusMarkup = (status) => {
     switch (status) {
       case 'Verified': 
@@ -32,7 +32,7 @@ const AdminDocumentRow = ({ doc, onVerify, onReject }) => {
         
         {doc.status !== 'Missing' && (
           <div className="flex items-center gap-1.5">
-            <button className="p-1.5 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors" title="View Document">
+            <button onClick={() => onView && onView(doc)} className="p-1.5 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors" title="View Document">
               <FiEye className="w-3.5 h-3.5" />
             </button>
             {doc.status === 'Pending Approval' && (

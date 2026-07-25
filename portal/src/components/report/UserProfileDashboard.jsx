@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast'
 import {
   User, Mail, Phone, MapPin, GraduationCap, Award, Building2, Calendar,
   Clock, Briefcase, UserCheck, Radio, FileText, ArrowLeft, ArrowRight,
@@ -44,8 +45,8 @@ const EditSelect = ({ value, onChange, options, placeholder, required }) => (
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
-const Section = ({ title, icon: Icon, editing, onEdit, onCancel, onSave, children }) => (
-  <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+  const Section = ({ title, icon: Icon, editing, onEdit, onCancel, onSave, children }) => (
+    <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-md">
     <div className="flex justify-between items-center mb-5">
       <div className="flex items-center gap-3">
         <div className="p-2.5 bg-green-50 rounded-full text-green-700">
@@ -195,11 +196,16 @@ export default function UserProfileDashboard({ onBack }) {
       const response = await submitPlacementApplication(formData);
       if (response?.data?.success) {
         setSubmitSuccess(true);
+        toast.success('Application submitted successfully!');
       } else {
-        setSubmitError(response?.data?.message || 'Submission failed');
+        const errorMsg = response?.data?.message || 'Submission failed';
+        setSubmitError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (error) {
-      setSubmitError(error?.response?.data?.message || 'Server error during submission');
+      const errorMsg = error?.response?.data?.message || 'Server error during submission';
+      setSubmitError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -218,7 +224,7 @@ export default function UserProfileDashboard({ onBack }) {
   }
 
   return (
-    <div className="w-full bg-gray-50/30 rounded-2xl flex flex-col gap-5">
+    <div className="w-full bg-gray-50 rounded-2xl flex flex-col gap-5 p-6">
 
       {/* ── Personal Details ── */}
       <Section

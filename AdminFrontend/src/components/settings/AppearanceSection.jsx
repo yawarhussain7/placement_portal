@@ -12,7 +12,7 @@ const AppearanceSection = () => {
   useEffect(() => {
     const fetchTheme = async () => {
       try {
-        const res = await api.get('/profile/profile');
+        const res = await api.get('/profile');
         const resData = res.data;
         if (resData.success && resData.data?.theme) {
           setTheme(resData.data.theme);
@@ -33,12 +33,12 @@ const AppearanceSection = () => {
 
   const handleApplyTheme = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) return;
+      // Get user ID from profile endpoint instead of decoding JWT
+      const profileRes = await api.get('/profile');
+      const profileData = profileRes.data;
       
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const userId = payload.id;
-      if (userId) {
+      if (profileData.success && profileData.data?._id) {
+        const userId = profileData.data._id;
         const res = await api.put(`/profile/profile-update/${userId}`, { theme });
         const resData = res.data;
         if (resData.success) {

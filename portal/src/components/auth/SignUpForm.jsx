@@ -11,11 +11,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../../Api/auth.js";
 
-export default function SignUpForm() {
+export default function SignUpForm({ onSwitch }) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    username: "",
+    fullName: "",
     email: "",
     password: "",
   });
@@ -43,11 +43,26 @@ export default function SignUpForm() {
     setError("");
 
     try {
-      await registerUser(formData);
+      const response = await registerUser(formData);
+      
+      console.log('Registration response:', response); // Debug log
 
-      toast.success("Account created successfully!");
-      setTimeout(() => navigate("/auth/login"), 500);
+      // Backend uses httpOnly cookies for authentication, no need to save token to localStorage
+      // The cookie is automatically sent with subsequent requests (withCredentials: true)
+
+      // Clear any stale cached portal data
+      localStorage.removeItem('webmantisPortalData');
+
+      toast.success("Account created successfully! Please login.");
+      
+      // Redirect to login page after showing success message
+      setTimeout(() => {
+        console.log('Redirecting to login...');
+        window.location.replace('/auth/login');
+      }, 1500);
+      
     } catch (error) {
+      console.error('Registration error:', error); // Debug log
       const msg =
         error.response?.data?.message || "Registration failed";
 
@@ -61,15 +76,7 @@ export default function SignUpForm() {
   return (
     <div className="w-full max-w-md mx-auto flex flex-col justify-center">
 
-      {/* HEADER */}
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold text-slate-900">
-          Create Account
-        </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Join us and start your journey
-        </p>
-      </div>
+      
 
       {/* ERROR */}
       {error && (
@@ -93,9 +100,9 @@ export default function SignUpForm() {
               type="text"
               required
               placeholder="John Doe"
-              value={formData.username}
+              value={formData.fullName}
               onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
+                setFormData({ ...formData, fullName: e.target.value })
               }
               className="w-full pl-10 pr-3 py-2.5 text-sm bg-white border border-slate-200 rounded-lg
               focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -205,7 +212,7 @@ export default function SignUpForm() {
       <div className="mt-6 text-center text-xs text-slate-600">
         Already have an account?{" "}
         <button
-          onClick={() => navigate("/auth/login")}
+          onClick={() => onSwitch ? onSwitch() : navigate("/auth/login")}
           className="font-semibold text-emerald-600"
         >
           Sign in

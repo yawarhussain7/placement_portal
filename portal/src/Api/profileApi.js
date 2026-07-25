@@ -1,20 +1,23 @@
 import api from './axios.js'
 
-// Get profile data (requires auth token)
+// Get profile data (uses cookie-based auth)
 export const getProfile = async () => {
-    return api.get('/profile/profile', {
+    return api.get('/api/student/profile')
+}
+
+// Update profile with optional avatar upload
+export const updateProfile = async (formData) => {
+    return api.put('/api/student/profile', formData, {
         headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+            'Content-Type': 'multipart/form-data'
         }
     })
 }
 
-// Update profile with optional avatar upload
-export const updateProfile = async (userId, formData) => {
-    return api.put(`/profile/profile-update/${userId}`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-        }
-    })
+// Helper to get full avatar URL
+export const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null
+    if (avatarPath.startsWith('http')) return avatarPath
+    // Convert relative path to full URL
+    return `http://localhost:8000${avatarPath}`
 }

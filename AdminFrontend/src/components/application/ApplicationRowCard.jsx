@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ApplicationRowCard = ({ application }) => {
+const ApplicationRowCard = ({ application, onView }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Selected': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
@@ -47,7 +47,7 @@ const ApplicationRowCard = ({ application }) => {
           <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold border ${getStatusBadge(application.status)}`}>
             {application.status}
           </span>
-          <button className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors text-xs">
+          <button onClick={() => onView && onView(application)} className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors text-xs">
             View
           </button>
         </div>

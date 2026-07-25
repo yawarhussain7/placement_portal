@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --color-emerald-50: #f0fdf4;
+  --color-emerald-100: #dcfce7;
+  --color-emerald-600: #16a34a;
+  --color-emerald-700: #15803d;
+  --color-emerald-800: #166534;
+}
+
 [data-theme="dark"] {
   color-scheme: dark;
 

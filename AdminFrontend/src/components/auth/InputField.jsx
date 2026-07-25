@@ -7,14 +7,14 @@ const InputField = ({ label, type = 'text', id, placeholder, value, onChange, ic
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
   return (
-    <div className="w-full mb-4">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1.5">
+    <div className="w-full mb-3">
+      <label htmlFor={id} className="block text-sm font-semibold text-slate-700 mb-1.5">
         {label}
       </label>
       <div className="relative">
         {Icon && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon className="text-gray-400" size={18} />
+            <Icon className="text-slate-400" size={18} />
           </div>
         )}
         <input
@@ -25,13 +25,13 @@ const InputField = ({ label, type = 'text', id, placeholder, value, onChange, ic
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className={`w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#22C55E] focus:ring-1 focus:ring-[#22C55E] transition-colors ${Icon ? 'pl-10' : ''} ${isPassword ? 'pr-10' : ''}`}
+          className={`w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all ${Icon ? 'pl-10' : ''} ${isPassword ? 'pr-10' : ''}`}
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors"
             tabIndex={-1}
           >
             {showPassword ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}

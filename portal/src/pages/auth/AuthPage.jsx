@@ -1,44 +1,152 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import SignInForm from "../../components/auth/SignInForm";
 import SignUpForm from "../../components/auth/SignUpForm";
+import logo from "../../assets/logo.png";
+import { usePortalData } from "../../context/PortalDataContext";
 
-
-export default function AuthPage({url}) {
+export default function AuthPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isSignIn, setIsSignIn] = useState(true);
+  const { isAuthenticated, profileLoaded } = usePortalData();
 
   useEffect(() => {
-    if (url === '/register') {
+    if (location.pathname === '/auth/register') {
       setIsSignIn(false);
-    } else if (url === '/login') {
+    } else if (location.pathname === '/auth/login') {
       setIsSignIn(true);
     }
-  }, [url]);
+  }, [location.pathname]);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (profileLoaded && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [profileLoaded, isAuthenticated, navigate]);
   return (
-    // Changed h-screen to min-h-screen to let flex-col work naturally with viewports
-    <div className="h-screen w-full bg-slate-50 flex flex-col antialiased text-slate-800 overflow-hidden">
-      
-      <header className="bg-white border-b border-slate-100 h-11 px-6 flex items-center justify-between shadow-sm shrink-0">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-            W
+    <div className="relative min-h-screen overflow-hidden bg-[#f8fafc] font-sans">
+      {/* Background */}
+      <div className="absolute inset-0">
+        <img
+          src="/bg.png"
+          alt="Background"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-white/10 backdrop-[1px]"></div>
+
+      {/* Main Container */}
+      <div className="relative z-10 flex min-h-screen">
+       
+        <div className="hidden xl:flex w-[52%]">
+          <div className="w-full max-w-[620px] ml-16 2xl:ml-24">
+            {/* Logo */}
+            <div className="mb-6">
+              <img
+                src={logo}
+                alt="WebMantis"
+                className="h-20 object-contain"
+              />
+            </div>
+
+            {/* Heading */}
+            <h1 className="text-[40px] leading-[1.05] font-black tracking-tight text-slate-900">
+              We turn ideas
+              <br />
+              into{" "}
+              <span className="text-emerald-600 relative">
+                powerful
+                <span className="absolute bottom-0.5 left-0 w-full h-2.5 bg-emerald-200/60 -z-10 rounded"></span>
+              </span>
+              <br />
+              digital solutions.
+            </h1>
+
+            {/* Green Line */}
+            <div className="w-12 h-1.5 bg-emerald-600 rounded-full mt-6 mb-6"></div>
+
+            {/* Description */}
+            <p className="text-base leading-7 text-slate-600 max-w-[200px]">
+              We blend strategy, design and technology to build products that
+              are beautiful, scalable and built for the future.
+            </p>
           </div>
-          <span className="font-semibold text-base tracking-tight text-slate-900">WebMantis</span>
         </div>
-      </header>
 
-      <main className="flex-1 flex items-center justify-center overflow-hidden">
-        <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-4 overflow-y-auto max-h-[calc(100vh-76px)]">
-          {isSignIn ? (
-            <SignInForm onSwitch={() => setIsSignIn(false)} />
-          ) : (
-            <SignUpForm onSwitch={() => setIsSignIn(true)} />
-          )}
+        {/* ==========================================
+                    RIGHT SIDE
+        =========================================== */}
+        <div className="w-full xl:w-[48%] flex items-center justify-center px-6 lg:px-10 py-6">
+          <div className="w-full max-w-[420px]">
+            {/* Mobile Logo */}
+            <div className="xl:hidden flex flex-col items-center mb-10">
+              <img
+                src={logo}
+                alt="WebMantis"
+                className="h-14 object-contain mb-4"
+              />
+
+              <h2 className="font-bold text-2xl text-slate-900">
+                WebMantis
+              </h2>
+
+              <p className="text-slate-500">
+                Digital Solutions
+              </p>
+            </div>
+
+            {/* Login Card */}
+            <div
+              className="
+                bg-white/95
+                backdrop-blur-xl
+                rounded-2xl
+                border border-white/70
+                shadow-[0_15px_50px_rgba(15,23,42,.1)]
+                px-5
+                sm:px-6
+                py-6
+                transition-all
+              "
+            >
+              {/* Header */}
+              <div className="text-center mb-6">
+                <h2 className="text-[28px] sm:text-[32px] font-extrabold tracking-tight text-slate-900 leading-tight">
+                  {isSignIn ? 'Welcome Back' : 'Create Account'}
+                </h2>
+
+                <p className="mt-2 text-slate-500 text-sm">
+                  {isSignIn ? 'Sign in to your account to continue' : 'Sign up to get started with WebMantis'}
+                </p>
+              </div>
+
+              {/* Form */}
+              {isSignIn ? (
+                <SignInForm onSwitch={() => {
+                  setIsSignIn(false);
+                  navigate('/auth/register');
+                }} />
+              ) : (
+                <SignUpForm onSwitch={() => {
+                  setIsSignIn(true);
+                  navigate('/auth/login');
+                }} />
+              )}
+
+              {/* Footer */}
+              <div className="mt-6 text-center">
+                <p className="text-[11px] text-slate-400">
+                  © 2025 WebMantis. All rights reserved.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-
-      <footer className="bg-white border-t border-slate-100 h-8 flex items-center justify-center text-[10px] text-slate-400 shrink-0 font-medium tracking-wide">
-        © 2026 WebMantis. Secure & Confidential. ASQA Compliant.
-      </footer>
+      </div>
     </div>
   );
 }

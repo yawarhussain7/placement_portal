@@ -92,7 +92,7 @@ const My_Application = ({ onBack, onNext }) => {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="p-6 bg-white rounded-xl shadow-md border border-gray-100">
       <div className="divide-y divide-gray-100">
 
         {documentRows.map((doc) => {
@@ -161,7 +161,7 @@ const My_Application = ({ onBack, onNext }) => {
       <div className="flex justify-between pt-6 mt-4 border-t">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-5 py-2 border rounded-lg text-gray-600"
+          className="flex items-center gap-2 px-5 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
         >
           <ArrowLeft size={14} />
           Back
@@ -169,7 +169,7 @@ const My_Application = ({ onBack, onNext }) => {
 
         <button
           onClick={handleUpload}
-          className="flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg"
+          className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
         >
           Save & Upload
           <ArrowRight size={14} />

@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import SignIn from './pages/auth/SignIn';
-import SignUp from './pages/auth/SignUp';
-import AdminRoute from './routes/AdminRoute';
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import ModernSignIn from "./pages/auth/ModernSignIn";
+import AdminRoute from "./routes/AdminRoute";
 import { Toaster } from "react-hot-toast";
-import api from './api/api.js';
+import api from "./api/api.js";
 const App = () => {
   useEffect(() => {
     const applyTheme = (theme) => {
@@ -13,45 +12,20 @@ const App = () => {
       document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     };
 
-    const syncTheme = async () => {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        applyTheme('light');
-        return;
-      }
-      try {
-        const res = await api.get('/profile/profile');
-        const resData = res.data;
-        if (resData.success && resData.data?.theme) {
-          applyTheme(resData.data.theme);
-        } else {
-          applyTheme('light');
-        }
-      } catch (err) {
-        console.warn('Failed to sync theme:', err);
-      }
-    };
-
-    syncTheme();
-
-    // Sync theme whenever window gains focus (e.g. user toggled settings in another tab)
-    window.addEventListener('focus', syncTheme);
-    return () => {
-      window.removeEventListener('focus', syncTheme);
-    };
+    // Apply default theme for admin
+    applyTheme('light');
   }, []);
 
   return (
     <>
     <Toaster position="top-right"/>
     <Routes>
-      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/login" element={<SignIn />} />
-      <Route path="/register" element={<SignUp />} />
+      <Route path="/" element={<Navigate to="/auth/admin-login" replace />} />
+      <Route path="/auth/admin-login" element={<ModernSignIn />} />
 
-      <Route path="/admin/*" element={<AdminRoute/>}/>
-      
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="/admin/*" element={<AdminRoute />} />
+
+      <Route path="*" element={<Navigate to="/auth/admin-login" replace />} />
     </Routes>
     </>
   );
